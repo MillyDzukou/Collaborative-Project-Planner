@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import cookieParser from "cookie-parser";
 import { pool } from "../../src/db/pool.js";
 import { tasksRouter } from "../../src/tasks/router.js";
+import { errorHandler } from "../../src/http/errorHandler.js";
 import { AUTH_COOKIE_NAME } from "../../src/auth/index.js";
 import { signAuthToken } from "../../src/auth/jwt.js";
 import type { ProjectRole } from "../../src/projects/permissions.js";
@@ -11,6 +12,7 @@ export function buildApp(): Express {
   app.use(express.json());
   app.use(cookieParser());
   app.use(tasksRouter);
+  app.use(errorHandler);
   return app;
 }
 

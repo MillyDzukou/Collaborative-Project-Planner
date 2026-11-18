@@ -2,7 +2,8 @@ import { Router, type NextFunction, type Request, type Response } from "express"
 import { requireAuth } from "../auth/index.js";
 import { requireProjectRole } from "../projects/middleware.js";
 import { publishProjectEvent } from "../realtime/events.js";
-import { errorBody, HttpError } from "./http-error.js";
+import { parsePagination } from "../http/pagination.js";
+import { HttpError } from "./http-error.js";
 import {
   parseCreateTaskInput,
   parseDependsOnTaskId,
@@ -58,8 +59,9 @@ tasksRouter.get(
     if (!(await projectExists(projectId))) {
       throw new HttpError(404, "project_not_found", `project ${projectId} not found`);
     }
-    const tasks = await listTasksForProject(projectId);
-    res.status(200).json({ tasks });
+    const { limit, offset } = parsePagination(req.query);
+    const { items, total } = await listTasksForProject(projectId, { limit, offset });
+    res.status(200).json({ tasks: items, page: { limit, offset, total } });
   }),
 );
 
@@ -169,13 +171,3 @@ tasksRouter.get(
     res.status(200).json({ task });
   }),
 );
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-tasksRouter.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-  if (err instanceof HttpError) {
-    res.status(err.status).json(errorBody(err.code, err.message, err.details));
-    return;
-  }
-  console.error(err);
-  res.status(500).json(errorBody("internal_error", "an unexpected error occurred"));
-});

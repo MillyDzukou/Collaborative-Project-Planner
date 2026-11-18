@@ -1,4 +1,5 @@
 import { redis } from "../db/redis.js";
+import { logger } from "../logger.js";
 
 export interface ProjectEvent {
   type: string;
@@ -21,6 +22,6 @@ export async function publishProjectEvent(event: ProjectEvent): Promise<void> {
   try {
     await redis.publish(projectChannel(event.projectId), JSON.stringify(event));
   } catch (err) {
-    console.error("failed to publish project event", err);
+    logger.error({ err }, "failed to publish project event");
   }
 }

@@ -30,7 +30,7 @@ scheduleRouter.get(
   "/projects/:id/schedule",
   requireAuth,
   requireProjectRole("read", resolveProjectIdParam),
-  async (req, res) => {
+  async (req, res, next) => {
     // `requireProjectRole` already validated and resolved this; `req.projectId`
     // is set once it ran successfully.
     const projectId = req.projectId!;
@@ -64,8 +64,7 @@ scheduleRouter.get(
       const schedule = computeSchedule(tasks, dependencies);
       res.status(200).json(schedule);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "unknown error";
-      res.status(500).json({ error: message });
+      next(err);
     }
   },
 );

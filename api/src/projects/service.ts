@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 import { pool } from "../db/pool.js";
 import { HttpError } from "../tasks/http-error.js";
+import type { Pagination } from "../http/pagination.js";
 import type { ProjectRole } from "./permissions.js";
 import { isProjectRole } from "./permissions.js";
 import { type MemberRow, type Member, type Project, type ProjectRow, toMember, toProject } from "./types.js";
@@ -20,16 +21,23 @@ export async function getMemberRole(projectId: number, userId: number): Promise<
   return rows[0]?.role ?? null;
 }
 
-export async function listProjectsForUser(userId: number): Promise<Project[]> {
-  const { rows } = await pool.query<ProjectRow>(
-    `SELECT p.*
-     FROM projects p
-     JOIN project_members pm ON pm.project_id = p.id
-     WHERE pm.user_id = $1
-     ORDER BY p.id ASC`,
-    [userId],
-  );
-  return rows.map(toProject);
+export async function listProjectsForUser(
+  userId: number,
+  { limit, offset }: Pagination,
+): Promise<{ items: Project[]; total: number }> {
+  const [{ rows }, count] = await Promise.all([
+    pool.query<ProjectRow>(
+      `SELECT p.*
+       FROM projects p
+       JOIN project_members pm ON pm.project_id = p.id
+       WHERE pm.user_id = $1
+       ORDER BY p.id ASC
+       LIMIT $2 OFFSET $3`,
+      [userId, limit, offset],
+    ),
+    pool.query<{ n: string }>("SELECT count(*) AS n FROM project_members WHERE user_id = $1", [userId]),
+  ]);
+  return { items: rows.map(toProject), total: Number(count.rows[0]?.n ?? 0) };
 }
 
 export async function createProject(userId: number, input: CreateProjectInput): Promise<Project> {
@@ -101,12 +109,15 @@ export async function deleteProject(projectId: number): Promise<boolean> {
   return (rowCount ?? 0) > 0;
 }
 
-export async function listMembers(projectId: number): Promise<Member[]> {
-  const { rows } = await pool.query<MemberRow>(
-    `${MEMBER_SELECT} WHERE pm.project_id = $1 ORDER BY pm.user_id ASC`,
-    [projectId],
-  );
-  return rows.map(toMember);
+export async function listMembers(
+  projectId: number,
+  { limit, offset }: Pagination,
+): Promise<{ items: Member[]; total: number }> {
+  const [{ rows }, count] = await Promise.all([
+    pool.query<MemberRow>(`${MEMBER_SELECT} WHERE pm.project_id = $1 ORDER BY pm.user_id ASC LIMIT $2 OFFSET $3`, [projectId, limit, offset]),
+    pool.query<{ n: string }>("SELECT count(*) AS n FROM project_members WHERE project_id = $1", [projectId]),
+  ]);
+  return { items: rows.map(toMember), total: Number(count.rows[0]?.n ?? 0) };
 }
 
 export async function findUserIdByEmail(email: string): Promise<number | null> {

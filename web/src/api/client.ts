@@ -38,3 +38,14 @@ export interface Task { id: number; projectId: number; name: string; durationWee
 export interface Dependency { taskId: number; dependsOnTaskId: number }
 export interface TaskSchedule { id: number; earlyStart: number; earlyFinish: number; lateStart: number; lateFinish: number; float: number; critical: boolean }
 export interface Schedule { tasks: TaskSchedule[]; projectDurationWeeks: number }
+
+/** Follows `?limit&offset` pagination until every item has been fetched. */
+export async function fetchAll<T>(path: string, key: string): Promise<T[]> {
+  const limit = 200;
+  const items: T[] = [];
+  for (let offset = 0; ; offset += limit) {
+    const res = await api<Record<string, unknown> & { page: { total: number } }>(`${path}?limit=${limit}&offset=${offset}`);
+    items.push(...(res[key] as T[]));
+    if (offset + limit >= res.page.total) return items;
+  }
+}

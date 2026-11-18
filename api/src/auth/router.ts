@@ -1,5 +1,5 @@
 import { Router } from "express";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 import { pool } from "../db/pool.js";
 import { loginSchema, registerSchema } from "./schemas.js";
@@ -17,7 +17,7 @@ interface UserRow {
   name: string;
 }
 
-function sendAuthError(res: Response, err: unknown): void {
+function sendAuthError(res: Response, next: NextFunction, err: unknown): void {
   if (err instanceof AuthError) {
     res.status(err.status).json(err.toResponseBody());
     return;
@@ -27,10 +27,11 @@ function sendAuthError(res: Response, err: unknown): void {
     res.status(400).json(validationError(message).toResponseBody());
     return;
   }
-  throw err;
+  // Express 4 does not catch rejected async handlers; hand unexpected errors to the central handler.
+  next(err);
 }
 
-authRouter.post("/register", async (req: Request, res: Response) => {
+authRouter.post("/register", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password, name } = registerSchema.parse(req.body);
 
@@ -54,11 +55,11 @@ authRouter.post("/register", async (req: Request, res: Response) => {
 
     res.status(201).json({ id: user.id, email: user.email, name: user.name });
   } catch (err) {
-    sendAuthError(res, err);
+    sendAuthError(res, next, err);
   }
 });
 
-authRouter.post("/login", async (req: Request, res: Response) => {
+authRouter.post("/login", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
 
@@ -80,7 +81,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     res.cookie(AUTH_COOKIE_NAME, token, authCookieOptions());
     res.status(200).json({ id: user.id, email: user.email, name: user.name });
   } catch (err) {
-    sendAuthError(res, err);
+    sendAuthError(res, next, err);
   }
 });
 
@@ -89,7 +90,7 @@ authRouter.post("/logout", requireAuth, (_req: Request, res: Response) => {
   res.status(200).json({ ok: true });
 });
 
-authRouter.get("/me", requireAuth, async (req: Request, res: Response) => {
+authRouter.get("/me", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { rows: [user] } = await pool.query<Pick<UserRow, "id" | "email" | "name">>(
       "SELECT id, email, name FROM users WHERE id = $1",
@@ -102,6 +103,6 @@ authRouter.get("/me", requireAuth, async (req: Request, res: Response) => {
 
     res.status(200).json({ id: user.id, email: user.email, name: user.name });
   } catch (err) {
-    sendAuthError(res, err);
+    sendAuthError(res, next, err);
   }
 });

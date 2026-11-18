@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, ApiError, type Dependency, type Member, type Project, type Schedule, type Task, type User } from "../api/client.js";
+import { api, ApiError, fetchAll, type Dependency, type Member, type Project, type Schedule, type Task, type User } from "../api/client.js";
 
 export function useMe() {
   return useQuery({
@@ -39,7 +39,7 @@ export function useAuth() {
 }
 
 export function useProjects() {
-  return useQuery({ queryKey: ["projects"], queryFn: async () => (await api<{ projects: Project[] }>("/projects")).projects });
+  return useQuery({ queryKey: ["projects"], queryFn: () => fetchAll<Project>("/projects", "projects") });
 }
 
 export function useCreateProject() {
@@ -55,7 +55,7 @@ export function useProject(id: number) {
 }
 
 export function useMembers(id: number) {
-  return useQuery({ queryKey: ["members", id], queryFn: async () => (await api<{ members: Member[] }>(`/projects/${id}/members`)).members });
+  return useQuery({ queryKey: ["members", id], queryFn: () => fetchAll<Member>(`/projects/${id}/members`, "members") });
 }
 
 export function useInvite(id: number) {
@@ -67,7 +67,7 @@ export function useInvite(id: number) {
 }
 
 export function useTasks(id: number) {
-  return useQuery({ queryKey: ["tasks", id], queryFn: async () => (await api<{ tasks: Task[] }>(`/projects/${id}/tasks`)).tasks });
+  return useQuery({ queryKey: ["tasks", id], queryFn: () => fetchAll<Task>(`/projects/${id}/tasks`, "tasks") });
 }
 
 export function useDependencies(id: number) {
