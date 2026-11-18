@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
 import { app, createApp } from "../../src/server.js";
 import { config } from "../../src/config.js";
@@ -83,6 +83,16 @@ describe("API hardening", () => {
       const res = await request(app).post("/auth/login").send({ email: "a@b.co", password: "x".repeat(200_000) });
       expect(res.status).toBe(413);
       expect(res.body.error.code).toBe("payload_too_large");
+    });
+  });
+
+  describe("auth router errors", () => {
+    it("returns a 500 in the standard shape (not a hang) when the database fails", async () => {
+      const spy = vi.spyOn(pool, "query").mockRejectedValueOnce(new Error("db exploded"));
+      const res = await request(app).post("/auth/login").send({ email: "a@example.com", password: "long-enough-pw" });
+      spy.mockRestore();
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: { code: "internal_error", message: "an unexpected error occurred" } });
     });
   });
 
