@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { config } from "./config.js";
 import { authRouter } from "./auth/index.js";
+import { tasksRouter } from "./tasks/router.js";
 
 export const app = express();
 
@@ -15,6 +16,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/auth", authRouter);
+app.use(tasksRouter);
 
 // Skip listening under the test runner so test files can import `app`
 // (e.g. with supertest) without binding a real port.
