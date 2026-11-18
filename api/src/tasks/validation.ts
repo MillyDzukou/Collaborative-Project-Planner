@@ -9,6 +9,8 @@ export interface CreateTaskInput {
 }
 
 export interface UpdateTaskInput {
+  /** The version the client last saw; the update only applies if it still matches. */
+  version: number;
   name?: string;
   durationWeeks?: number;
   status?: string;
@@ -84,7 +86,12 @@ export function parseUpdateTaskInput(body: unknown): UpdateTaskInput {
     badRequest("request body must be a JSON object");
   }
 
-  const result: UpdateTaskInput = {};
+  const version = body.version;
+  if (typeof version !== "number" || !Number.isInteger(version) || version < 1) {
+    badRequest("version is required and must be a positive integer (the version you last saw)");
+  }
+
+  const result: UpdateTaskInput = { version };
 
   if ("name" in body) {
     const name = body.name;
@@ -126,7 +133,7 @@ export function parseUpdateTaskInput(body: unknown): UpdateTaskInput {
     result.cost = cost as number | null;
   }
 
-  if (Object.keys(result).length === 0) {
+  if (Object.keys(result).length === 1) {
     badRequest("at least one field must be provided");
   }
 

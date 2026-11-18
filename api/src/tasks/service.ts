@@ -77,15 +77,34 @@ export async function updateTask(taskId: number, patch: UpdateTaskInput): Promis
     values.push(patch.cost);
   }
 
-  columns.push("updated_at = now()");
+  columns.push("version = version + 1", "updated_at = now()");
 
-  values.push(taskId);
+  // Optimistic concurrency: a single atomic compare-and-set. If another
+  // writer got in first the version no longer matches and zero rows update,
+  // so concurrent edits can never silently overwrite each other.
+  values.push(taskId, patch.version);
   const { rows } = await pool.query<TaskRow>(
-    `UPDATE tasks SET ${columns.join(", ")} WHERE id = $${index} RETURNING *`,
+    `UPDATE tasks SET ${columns.join(", ")}
+      WHERE id = $${index++} AND version = $${index}
+      RETURNING *`,
     values,
   );
   const row = rows[0];
-  return row ? toTask(row) : null;
+  if (row) {
+    return toTask(row);
+  }
+
+  // Zero rows: either the task is gone (404) or the version was stale (409).
+  const current = await getTaskById(taskId);
+  if (!current) {
+    return null;
+  }
+  throw new HttpError(
+    409,
+    "version_conflict",
+    `task was changed by someone else (you had version ${patch.version}, current is ${current.version})`,
+    { current },
+  );
 }
 
 export async function deleteTask(taskId: number): Promise<boolean> {

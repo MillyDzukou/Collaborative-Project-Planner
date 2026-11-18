@@ -1,6 +1,13 @@
 import { useState, type FormEvent } from "react";
-import type { Dependency, Schedule, Task } from "../api/client.js";
+import { ApiError, type Dependency, type Schedule, type Task } from "../api/client.js";
 import { usePlanMutations } from "../hooks/queries.js";
+
+type Patch = { name?: string; duration_weeks?: number; status?: string };
+interface Conflict { attempted: Patch; current: Task }
+
+function describe(p: Patch): string {
+  return Object.entries(p).map(([k, v]) => `${k.replace("_", " ")} → ${v}`).join(", ");
+}
 
 const STATUSES = ["pending", "in_progress", "done"];
 
@@ -34,7 +41,19 @@ export default function TaskTable({ projectId, tasks, deps, schedule, canWrite }
   const [weeks, setWeeks] = useState("1");
   const byId = new Map(tasks.map((t) => [t.id, t]));
   const sched = new Map(schedule?.tasks.map((s) => [s.id, s]));
-  const error = m.addTask.error ?? m.updateTask.error ?? m.deleteTask.error ?? m.addDep.error ?? m.removeDep.error;
+  const [conflict, setConflict] = useState<Conflict | null>(null);
+  const update = (t: Task, patch: Patch) =>
+    m.updateTask.mutate({ id: t.id, version: t.version, ...patch }, {
+      onError: (err) => {
+        if (err instanceof ApiError && err.status === 409) {
+          const current = (err.details as { current?: Task } | undefined)?.current;
+          if (current) setConflict({ attempted: patch, current });
+        }
+      },
+      onSuccess: () => setConflict(null),
+    });
+  const apiError = m.addTask.error ?? m.updateTask.error ?? m.deleteTask.error ?? m.addDep.error ?? m.removeDep.error;
+  const error = apiError instanceof ApiError && apiError.status === 409 && conflict ? null : apiError;
 
   function add(e: FormEvent) {
     e.preventDefault();
@@ -43,6 +62,22 @@ export default function TaskTable({ projectId, tasks, deps, schedule, canWrite }
 
   return (
     <div>
+      {conflict && (
+        <div className="conflict card" role="alert">
+          <strong>"{conflict.current.name}" was changed by someone else.</strong>
+          <p className="muted">
+            Your edit ({describe(conflict.attempted)}) was not saved. The latest version is now shown below.
+          </p>
+          <div className="row">
+            <button onClick={() => update(conflict.current, conflict.attempted)} disabled={m.updateTask.isPending}>
+              Reapply my change
+            </button>
+            <button className="link" onClick={() => { setConflict(null); m.updateTask.reset(); }}>
+              Keep their version
+            </button>
+          </div>
+        </div>
+      )}
       {error && <p className="error" role="alert">{error.message}</p>}
       {tasks.length === 0 && <p className="muted">No tasks yet.{canWrite ? " Add the first one below." : ""}</p>}
       {tasks.length > 0 && (
@@ -58,11 +93,11 @@ export default function TaskTable({ projectId, tasks, deps, schedule, canWrite }
                 const options = tasks.filter((o) => o.id !== t.id && !mine.some((d) => d.dependsOnTaskId === o.id));
                 return (
                   <tr key={t.id} className={s?.critical ? "critical-row" : undefined}>
-                    <td><EditableCell value={t.name} type="text" disabled={!canWrite} onSave={(v) => m.updateTask.mutate({ id: t.id, name: v })} /></td>
-                    <td><EditableCell value={t.durationWeeks} type="number" disabled={!canWrite} onSave={(v) => m.updateTask.mutate({ id: t.id, duration_weeks: Number(v) })} /></td>
+                    <td><EditableCell value={t.name} type="text" disabled={!canWrite} onSave={(v) => update(t, { name: v })} /></td>
+                    <td><EditableCell value={t.durationWeeks} type="number" disabled={!canWrite} onSave={(v) => update(t, { duration_weeks: Number(v) })} /></td>
                     <td>
                       {canWrite ? (
-                        <select value={t.status} onChange={(e) => m.updateTask.mutate({ id: t.id, status: e.target.value })} aria-label={`Status of ${t.name}`}>
+                        <select value={t.status} onChange={(e) => update(t, { status: e.target.value })} aria-label={`Status of ${t.name}`}>
                           {[...new Set([...STATUSES, t.status])].map((x) => <option key={x}>{x}</option>)}
                         </select>
                       ) : t.status}

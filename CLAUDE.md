@@ -17,6 +17,18 @@ Web: http://localhost:5173, API: http://localhost:4000/health. If dependencies c
 the containers can't find a package, remove the stale `api_node_modules` /
 `web_node_modules` volumes (not `postgres_data`) and rebuild.
 
+## Running API tests
+
+Integration tests TRUNCATE tables, so never point them at the dev database. Use the
+separate `planner_test` DB (create once with
+`docker exec collaborativeprojectplanner-postgres-1 psql -U planner -d planner -c "CREATE DATABASE planner_test"`):
+
+```bash
+cd api
+export DATABASE_URL=postgres://planner:planner@localhost:5432/planner_test REDIS_URL=redis://localhost:6379 NODE_ENV=test
+npm run migrate:up && npx vitest run
+```
+
 ## Conventions
 
 - API errors use `{ error: { code, message } }`; request bodies use camelCase unless an

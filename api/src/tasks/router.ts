@@ -173,7 +173,7 @@ tasksRouter.get(
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 tasksRouter.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof HttpError) {
-    res.status(err.status).json(errorBody(err.code, err.message));
+    res.status(err.status).json(errorBody(err.code, err.message, err.details));
     return;
   }
   console.error(err);

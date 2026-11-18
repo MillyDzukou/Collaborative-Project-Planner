@@ -79,10 +79,10 @@ describe("task CRUD", () => {
     const res = await request(app)
       .patch(`/tasks/${taskId}`)
       .set("Cookie", ownerCookie)
-      .send({ name: "New name", status: "in_progress" });
+      .send({ version: 1, name: "New name", status: "in_progress" });
 
     expect(res.status).toBe(200);
-    expect(res.body.task).toMatchObject({ name: "New name", status: "in_progress" });
+    expect(res.body.task).toMatchObject({ name: "New name", status: "in_progress", version: 2 });
   });
 
   it("returns 404 when updating a task that does not exist", async () => {
@@ -90,7 +90,7 @@ describe("task CRUD", () => {
     const res = await request(app)
       .patch("/tasks/999999")
       .set("Cookie", ownerCookie)
-      .send({ name: "Nope" });
+      .send({ version: 1, name: "Nope" });
     expect(res.status).toBe(404);
   });
 

@@ -42,3 +42,4 @@ th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e
 .live-connecting { color: #d97706; }
 .live-offline { color: var(--crit); }
 @media (max-width: 600px) { .page { padding: 0.5rem; } th, td { padding: 0.3rem; } }
+.conflict { border-color: #d97706; background: #fffbeb; }

@@ -129,8 +129,20 @@ cd api && node scripts/fanout-check.mjs       # writes via :4000, listens on :40
 
 - **PostgreSQL**, not a document store: the data (users, projects, tasks,
   dependencies) is relational and benefits from foreign keys and constraints.
-- **Optimistic concurrency** (a `version` column) instead of row locking: simple,
-  no locks held while a user is thinking, explicit 409 conflicts.
+- **Optimistic concurrency** (a `version` column) instead of row locking or CRDTs.
+  Every `PATCH /tasks/:id` carries the `version` the client last saw, and the
+  write is one atomic statement: `UPDATE tasks SET ..., version = version + 1
+  WHERE id = $1 AND version = $2`. Zero rows updated means someone else got
+  there first, so the API answers `409 version_conflict` with the task's current
+  state and the UI offers "reapply my change" or "keep their version". Row
+  locks would be held for as long as a person thinks (or abandoned when a tab
+  closes), and a lost update is exactly what they exist to prevent but at a
+  cost we don't need: conflicts on a task row are rare and cheap to resolve by
+  hand. CRDTs would merge concurrent edits automatically, but that machinery
+  (and its unintuitive merges, e.g. two people renaming the same task) is
+  overkill for small, field-level edits where a human is better placed to pick
+  the winner. The trade-off: a losing writer has to retry. A test fires ten
+  simultaneous updates from the same version and asserts exactly one succeeds.
 - **Redis pub/sub** so the API stays stateless and horizontally scalable — any
   instance can publish an event and every instance forwards it to its own
   WebSocket clients.
@@ -139,13 +151,14 @@ cd api && node scripts/fanout-check.mjs       # writes via :4000, listens on :40
 
 ## Status
 
-Steps 1-9 are done: scope defined, infra scaffolded, the database designed,
+Steps 1-10 are done: scope defined, infra scaffolded, the database designed,
 authentication (register/login/logout/me), projects and permissions
 (roles, membership, last-owner protection), tasks and dependencies (CRUD,
 cycle/cross-project rejection), the CPM scheduling engine, the React
 frontend (login/register, project list, board with inline-editable task
 table, dependencies, Gantt view with critical tasks highlighted, read-only
 viewer mode), and real-time updates (cookie-authenticated WebSocket at
-`/ws?projectId=N`, members-only rooms, Redis pub/sub fan-out). Next up is
-Step 10 (edit conflicts) — see
+`/ws?projectId=N`, members-only rooms, Redis pub/sub fan-out), and edit-conflict
+handling (versioned PATCH, 409 with current state, reapply/keep UI). Next up is
+Step 11 (harden the API) — see
 [`docs/ai-build-guide.md`](docs/ai-build-guide.md).
