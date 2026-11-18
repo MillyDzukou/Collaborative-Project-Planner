@@ -37,4 +37,8 @@ th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #e5e
 .bar.critical { background: var(--crit); }
 .swatch { display: inline-block; width: 10px; height: 10px; background: var(--accent); margin: 0 0.25rem 0 0.75rem; }
 .swatch.critical { background: var(--crit); margin-left: 0; }
+.live { font-size: 0.75rem; font-weight: normal; }
+.live-live { color: #16a34a; }
+.live-connecting { color: #d97706; }
+.live-offline { color: var(--crit); }
 @media (max-width: 600px) { .page { padding: 0.5rem; } th, td { padding: 0.3rem; } }

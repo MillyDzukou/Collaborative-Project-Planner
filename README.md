@@ -113,6 +113,18 @@ DATABASE_URL=postgres://planner:planner@localhost:5432/planner npm run seed
 (When running inside Docker Compose, `DATABASE_URL` is already set on the `api`
 container — these commands are for running migrations from the host.)
 
+## Real-time
+
+After each successful write the API publishes `{type, projectId, payload, version}`
+to the Redis channel `project:<id>`; every API instance subscribes to the
+channels of its connected clients and forwards messages over WebSocket. To prove
+fan-out across instances:
+
+```bash
+docker compose --profile scale up -d api2     # second API on :4001
+cd api && node scripts/fanout-check.mjs       # writes via :4000, listens on :4001
+```
+
 ## Design decisions
 
 - **PostgreSQL**, not a document store: the data (users, projects, tasks,
@@ -127,11 +139,13 @@ container — these commands are for running migrations from the host.)
 
 ## Status
 
-Steps 1-8 are done: scope defined, infra scaffolded, the database designed,
+Steps 1-9 are done: scope defined, infra scaffolded, the database designed,
 authentication (register/login/logout/me), projects and permissions
 (roles, membership, last-owner protection), tasks and dependencies (CRUD,
-cycle/cross-project rejection), the CPM scheduling engine, and the React
+cycle/cross-project rejection), the CPM scheduling engine, the React
 frontend (login/register, project list, board with inline-editable task
 table, dependencies, Gantt view with critical tasks highlighted, read-only
-viewer mode). Next up is Step 9 (real-time updates) — see
+viewer mode), and real-time updates (cookie-authenticated WebSocket at
+`/ws?projectId=N`, members-only rooms, Redis pub/sub fan-out). Next up is
+Step 10 (edit conflicts) — see
 [`docs/ai-build-guide.md`](docs/ai-build-guide.md).

@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/api/client.ts","./src/components/gantt.tsx","./src/components/tasktable.tsx","./src/hooks/queries.ts","./src/hooks/useprojectsocket.ts","./src/pages/authpage.tsx","./src/pages/projectboardpage.tsx","./src/pages/projectlistpage.tsx"],"version":"5.9.3"}
