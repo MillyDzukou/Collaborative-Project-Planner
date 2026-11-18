@@ -6,6 +6,7 @@ import { authRouter } from "./auth/index.js";
 import { tasksRouter } from "./tasks/router.js";
 import { scheduleRouter } from "./scheduling/schedule.routes.js";
 import { projectsRouter } from "./projects/router.js";
+import { attachRealtime } from "./realtime/ws.js";
 
 export const app = express();
 
@@ -25,7 +26,8 @@ app.use(scheduleRouter);
 // Skip listening under the test runner so test files can import `app`
 // (e.g. with supertest) without binding a real port.
 if (process.env.NODE_ENV !== "test") {
-  app.listen(config.port, () => {
+  const server = app.listen(config.port, () => {
     console.log(`api listening on :${config.port}`);
   });
+  attachRealtime(server);
 }

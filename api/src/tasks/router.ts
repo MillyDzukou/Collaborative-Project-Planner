@@ -1,6 +1,7 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { requireAuth } from "../auth/index.js";
 import { requireProjectRole } from "../projects/middleware.js";
+import { publishProjectEvent } from "../realtime/events.js";
 import { errorBody, HttpError } from "./http-error.js";
 import {
   parseCreateTaskInput,
@@ -83,6 +84,7 @@ tasksRouter.post(
     }
     const input = parseCreateTaskInput(req.body);
     const task = await createTask(projectId, input);
+    await publishProjectEvent({ type: "task.created", projectId, payload: { task }, version: task.version });
     res.status(201).json({ task });
   }),
 );
@@ -98,6 +100,7 @@ tasksRouter.patch(
     if (!task) {
       throw new HttpError(404, "task_not_found", `task ${taskId} not found`);
     }
+    await publishProjectEvent({ type: "task.updated", projectId: task.projectId, payload: { task }, version: task.version });
     res.status(200).json({ task });
   }),
 );
@@ -112,6 +115,7 @@ tasksRouter.delete(
     if (!deleted) {
       throw new HttpError(404, "task_not_found", `task ${taskId} not found`);
     }
+    await publishProjectEvent({ type: "task.deleted", projectId: req.projectId!, payload: { taskId } });
     res.status(204).send();
   }),
 );
@@ -124,6 +128,7 @@ tasksRouter.post(
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const dependsOnTaskId = parseDependsOnTaskId(req.body);
     await addDependency(taskId, dependsOnTaskId);
+    await publishProjectEvent({ type: "dependency.added", projectId: req.projectId!, payload: { taskId, dependsOnTaskId } });
     res.status(201).json({ taskId, dependsOnTaskId });
   }),
 );
@@ -146,6 +151,7 @@ tasksRouter.delete(
         `dependency from ${taskId} to ${dependsOnTaskId} not found`,
       );
     }
+    await publishProjectEvent({ type: "dependency.removed", projectId: req.projectId!, payload: { taskId, dependsOnTaskId } });
     res.status(204).send();
   }),
 );

@@ -1,5 +1,6 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { requireAuth } from "../auth/index.js";
+import { publishProjectEvent } from "../realtime/events.js";
 import { errorBody, HttpError } from "../tasks/http-error.js";
 import { parseIntParam } from "../tasks/validation.js";
 import { requireProjectRole } from "./middleware.js";
@@ -79,6 +80,7 @@ projectsRouter.patch(
     if (!project) {
       throw new HttpError(404, "project_not_found", `project ${req.projectId} not found`);
     }
+    await publishProjectEvent({ type: "project.updated", projectId: project.id, payload: { project } });
     res.status(200).json({ project });
   }),
 );
@@ -113,6 +115,7 @@ projectsRouter.post(
   asyncHandler(async (req, res) => {
     const input = parseInviteMemberInput(req.body);
     const member = await addMember(req.projectId!, input.email, input.role);
+    await publishProjectEvent({ type: "member.changed", projectId: req.projectId!, payload: { member } });
     res.status(201).json({ member });
   }),
 );
@@ -128,6 +131,7 @@ projectsRouter.patch(
     if (!member) {
       throw new HttpError(404, "member_not_found", `user ${targetUserId} is not a member of this project`);
     }
+    await publishProjectEvent({ type: "member.changed", projectId: req.projectId!, payload: { member } });
     res.status(200).json({ member });
   }),
 );
@@ -142,6 +146,7 @@ projectsRouter.delete(
     if (result === "not_found") {
       throw new HttpError(404, "member_not_found", `user ${targetUserId} is not a member of this project`);
     }
+    await publishProjectEvent({ type: "member.changed", projectId: req.projectId!, payload: { removedUserId: targetUserId } });
     res.status(204).send();
   }),
 );

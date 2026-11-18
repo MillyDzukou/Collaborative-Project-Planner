@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import Gantt from "../components/Gantt.js";
 import TaskTable from "../components/TaskTable.js";
+import { useProjectSocket } from "../hooks/useProjectSocket.js";
 import { useDependencies, useInvite, useMe, useMembers, useProject, useSchedule, useTasks } from "../hooks/queries.js";
 
 function Invite({ projectId }: { projectId: number }) {
@@ -33,6 +34,7 @@ export default function ProjectBoardPage() {
   const tasks = useTasks(id);
   const deps = useDependencies(id);
   const schedule = useSchedule(id);
+  const live = useProjectSocket(id);
 
   if (project.isLoading) return <p>Loading project…</p>;
   if (project.error || !project.data) {
@@ -50,7 +52,12 @@ export default function ProjectBoardPage() {
   return (
     <section>
       <Link to="/">← Projects</Link>
-      <h2>{project.data.name}</h2>
+      <h2>
+        {project.data.name}{" "}
+        <small className={`live live-${live}`} title="Real-time connection">
+          ● {live === "live" ? "Live" : live === "connecting" ? "Connecting…" : "Offline — retrying"}
+        </small>
+      </h2>
       {project.data.description && <p className="muted">{project.data.description}</p>}
       <p className="muted">
         Your role: <strong>{role ?? "…"}</strong>
