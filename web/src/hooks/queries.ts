@@ -82,14 +82,16 @@ export function useSchedule(id: number) {
 export function usePlanMutations(projectId: number) {
   const qc = useQueryClient();
   const refresh = () => Promise.all(["tasks", "deps", "schedule"].map((k) => qc.invalidateQueries({ queryKey: [k, projectId] })));
-  const opts = { onSuccess: refresh };
+  // onSettled (not onSuccess) so a 409 conflict also refetches the latest state.
+  const opts = { onSettled: refresh };
   return {
     addTask: useMutation({
       mutationFn: (b: { name: string; duration_weeks: number }) => api(`/projects/${projectId}/tasks`, { method: "POST", body: b }),
       ...opts,
     }),
     updateTask: useMutation({
-      mutationFn: ({ id, ...b }: { id: number; name?: string; duration_weeks?: number; status?: string }) =>
+      // `version` is the version the user last saw; the server rejects with 409 if it moved on.
+      mutationFn: ({ id, ...b }: { id: number; version: number; name?: string; duration_weeks?: number; status?: string }) =>
         api(`/tasks/${id}`, { method: "PATCH", body: b }),
       ...opts,
     }),

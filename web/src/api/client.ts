@@ -3,10 +3,12 @@ export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 export class ApiError extends Error {
   status: number;
   code: string;
-  constructor(status: number, code: string, message: string) {
+  details?: unknown;
+  constructor(status: number, code: string, message: string, details?: unknown) {
     super(message);
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }
 
@@ -23,7 +25,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
   if (!res.ok) {
     const e = data?.error;
     const message = typeof e === "string" ? e : (e?.message ?? res.statusText);
-    throw new ApiError(res.status, e?.code ?? "error", message);
+    throw new ApiError(res.status, e?.code ?? "error", message, e?.details);
   }
   return data as T;
 }

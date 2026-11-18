@@ -186,7 +186,7 @@ describe("permission matrix: editor can manage tasks but not members", () => {
     const res = await request(app)
       .patch(`/tasks/${taskId}`)
       .set("Cookie", editor.cookie)
-      .send({ name: "Edited by editor" });
+      .send({ version: 1, name: "Edited by editor" });
 
     expect(res.status).toBe(200);
     expect(res.body.task).toMatchObject({ name: "Edited by editor" });
