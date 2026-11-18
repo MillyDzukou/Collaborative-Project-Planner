@@ -5,6 +5,7 @@ import { config } from "./config.js";
 import { authRouter } from "./auth/index.js";
 import { tasksRouter } from "./tasks/router.js";
 import { scheduleRouter } from "./scheduling/schedule.routes.js";
+import { projectsRouter } from "./projects/router.js";
 
 export const app = express();
 
@@ -17,6 +18,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/auth", authRouter);
+app.use(projectsRouter);
 app.use(tasksRouter);
 app.use(scheduleRouter);
 
