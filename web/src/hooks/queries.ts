@@ -19,7 +19,9 @@ export function useMe() {
 export function useAuth() {
   const qc = useQueryClient();
   const done = (u: User | null) => {
-    qc.clear();
+    // Drop everything cached for the previous user, but keep the "me" query itself:
+    // clearing it would detach the observer App uses and the UI would never update.
+    qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "me" });
     qc.setQueryData(["me"], u);
   };
   return {

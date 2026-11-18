@@ -11,7 +11,6 @@ export function notFoundHandler(_req: Request, res: Response): void {
  * The single place every error ends up. All responses use
  * `{ error: { code, message } }` and 5xx never leaks internals to the client.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction): void {
   if (res.headersSent) return;
 

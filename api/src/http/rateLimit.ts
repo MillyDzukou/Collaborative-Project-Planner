@@ -15,7 +15,7 @@ function limiter(windowMs: number, limit: number, opts: { skipSuccessfulRequests
 }
 
 /** Factories (not singletons) so each app/test gets independent counters. */
-export const createGlobalLimiter = (limit = 300) => limiter(60_000, limit);
+export const createGlobalLimiter = (limit = 600) => limiter(60_000, limit);
 /** Strict: only failed attempts count, so legitimate users aren't locked out but guessing is throttled. */
 export const createLoginLimiter = (limit = 10) => limiter(15 * 60_000, limit, { skipSuccessfulRequests: true });
 export const createRegisterLimiter = (limit = 10) => limiter(60 * 60_000, limit);

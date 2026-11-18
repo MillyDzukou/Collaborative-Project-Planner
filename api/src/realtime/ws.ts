@@ -5,6 +5,7 @@ import { redis } from "../db/redis.js";
 import { AUTH_COOKIE_NAME, verifyAuthToken } from "../auth/jwt.js";
 import { getMemberRole } from "../projects/service.js";
 import { config } from "../config.js";
+import { logger } from "../logger.js";
 import { projectChannel } from "./events.js";
 
 function parseCookies(header: string | undefined): Record<string, string> {
@@ -31,6 +32,9 @@ export function attachRealtime(server: Server): { close: () => void } {
   const wss = new WebSocketServer({ noServer: true });
   const rooms = new Map<number, Set<WebSocket>>();
   const subscriber = redis.duplicate();
+  let closing = false;
+  // Redis (un)subscribe failures must never become unhandled rejections.
+  const logRedisError = (err: unknown) => logger.error({ err }, "realtime redis error");
 
   subscriber.on("message", (channel: string, message: string) => {
     const projectId = Number(channel.slice("project:".length));
@@ -44,14 +48,15 @@ export function attachRealtime(server: Server): { close: () => void } {
     if (!room) {
       room = new Set();
       rooms.set(projectId, room);
-      void subscriber.subscribe(projectChannel(projectId));
+      subscriber.subscribe(projectChannel(projectId)).catch(logRedisError);
     }
     room.add(ws);
     ws.on("close", () => {
       room.delete(ws);
       if (room.size === 0) {
         rooms.delete(projectId);
-        void subscriber.unsubscribe(projectChannel(projectId));
+        // During shutdown the subscriber connection is already being closed.
+        if (!closing) subscriber.unsubscribe(projectChannel(projectId)).catch(logRedisError);
       }
     });
   }
@@ -91,9 +96,10 @@ export function attachRealtime(server: Server): { close: () => void } {
 
   return {
     close: () => {
+      closing = true;
       for (const client of wss.clients) client.close(1001, "server shutting down");
       wss.close();
-      void subscriber.quit();
+      subscriber.quit().catch(logRedisError);
     },
   };
 }
