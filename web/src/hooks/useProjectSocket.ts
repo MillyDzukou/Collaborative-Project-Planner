@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { API_URL } from "../api/client.js";
+import { wsBaseUrl } from "../api/client.js";
 
 export type SocketStatus = "connecting" | "live" | "offline";
 
@@ -34,7 +34,7 @@ export function useProjectSocket(projectId: number): SocketStatus {
 
     const connect = () => {
       setStatus("connecting");
-      ws = new WebSocket(`${API_URL.replace(/^http/, "ws")}/ws?projectId=${projectId}`);
+      ws = new WebSocket(`${wsBaseUrl()}/ws?projectId=${projectId}`);
       ws.onopen = () => {
         if (attempt > 0) refetch(ALL);
         attempt = 0;

@@ -1,0 +1,84 @@
+# Production-like rehearsal on one machine: production images (compiled API, nginx-served SPA),
+# migrations as a separate release step, and nginx as the ONLY published port. Mirrors what a
+# PaaS deployment does (see docs/deployment.md).
+#
+#   JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))") \
+#   POSTGRES_PASSWORD=choose-one docker compose -f docker-compose.prod.yml up -d --build
+#   open http://localhost:8080
+#
+# Separate project name/volumes from the dev stack, so both can coexist.
+name: planner-prod
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: planner
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: planner
+    volumes:
+      - prod_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U planner -d planner"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Release step: apply migrations, then exit. The API only starts after this succeeds.
+  migrate:
+    build:
+      context: ./api
+    command: ["npm", "run", "migrate:up"]
+    environment:
+      DATABASE_URL: postgres://planner:${POSTGRES_PASSWORD}@postgres:5432/planner
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ./api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgres://planner:${POSTGRES_PASSWORD}@postgres:5432/planner
+      REDIS_URL: redis://redis:6379
+      # Browsers reach the app at this origin (CORS + WebSocket Origin allow-list).
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET to a long random value}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Proxy hops in front of the API whose X-Forwarded-For to trust (nginx = 1). Raise it if a
+      # platform load balancer sits in front of nginx; see docs/deployment.md.
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+      RATE_LIMIT_REGISTER: ${RATE_LIMIT_REGISTER:-10}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+    restart: unless-stopped
+    environment:
+      API_UPSTREAM: api:4000
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+volumes:
+  prod_pg:

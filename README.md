@@ -139,6 +139,20 @@ PR: API (lint, type-check, migrate, test, build, prod `npm audit`), web (lint,
 build), then e2e (brings the stack up with Docker Compose and runs Playwright).
 A CI status badge will be added once the repository has a GitHub remote.
 
+## Deployment
+
+Not deployed yet; everything is prepared and rehearsed locally. The web container (nginx) serves the SPA and
+proxies `/api` (including WebSockets) to the API, so the browser sees a single origin and the `SameSite=Lax`
+auth cookie works on any hosting domain. Try the production setup on your machine:
+
+```bash
+JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))") \
+POSTGRES_PASSWORD=choose-one docker compose -f docker-compose.prod.yml up -d --build   # http://localhost:8080
+```
+
+Full guide, env vars, the `TRUST_PROXY` caveat, the Render Blueprint (`render.yaml`, unverified against a real
+account) and a release checklist: [`docs/deployment.md`](docs/deployment.md).
+
 ## Load testing
 
 k6 scripts, a bulk-data seed and `EXPLAIN ANALYZE` queries live in [`load/`](load/README.md) (how to run it,
@@ -223,5 +237,9 @@ hardening (see below). Step 12 (tests and CI) is done locally: 88 API
 unit/integration tests, 5 Playwright e2e flows (green on three consecutive runs),
 ESLint, and a GitHub Actions workflow (not yet run: the repo has no GitHub remote,
 so the CI badge is still to add). Step 13 (load testing) is done: k6 scripts, a
-measured baseline, one bottleneck found and fixed (see below). Next up is Step 14
-(deploy) — see [`docs/ai-build-guide.md`](docs/ai-build-guide.md).
+measured baseline, one bottleneck found and fixed (see below). Step 14 (deploy) is
+**prepared but not deployed**: production images, a same-origin nginx proxy, migrations
+as a release step, a demo-account seed and a Render Blueprint exist and were rehearsed
+locally, but nothing has been put on a real host yet (that needs your hosting account
+and secrets) — see [`docs/deployment.md`](docs/deployment.md). Remaining: the real
+deploy, then Steps 15–16 — see [`docs/ai-build-guide.md`](docs/ai-build-guide.md).

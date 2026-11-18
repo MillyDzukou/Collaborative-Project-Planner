@@ -20,7 +20,9 @@ export async function register(page: Page, user: TestUser) {
   await page.getByLabel("Email").fill(user.email);
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Register", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Your projects" })).toBeVisible();
+  // Registration = argon2 hash + auto-login (a second argon2 verify): deliberately CPU-heavy, so allow
+  // generous time on slow or busy machines (CI runners, a laptop also running other containers).
+  await expect(page.getByRole("heading", { name: "Your projects" })).toBeVisible({ timeout: 20_000 });
 }
 
 export async function newUserPage(browser: Browser, label: string) {
