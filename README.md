@@ -61,6 +61,7 @@ and open the project in two browsers.
 | [`load/README.md`](load/README.md) | k6 load tests, `EXPLAIN ANALYZE`, measured results and caveats |
 | [`docs/ai-build-guide.md`](docs/ai-build-guide.md) | How each step was built with Claude Code (worktrees, subagents, MCP) |
 | [`docs/demo-script.md`](docs/demo-script.md) | 2-minute demo walkthrough |
+| [`docs/interview-prep.md`](docs/interview-prep.md) | 5-minute walkthrough, stories, résumé bullets and Q&A, with what you can and can't claim |
 
 ## Tech stack
 
@@ -197,7 +198,8 @@ Process / verification:
 
 ## Status
 
-Steps 1–15 of the build guide are done: scope, infrastructure, database, authentication, projects and permissions, tasks and
+Everything in steps 1–16 of the build guide that can be done without a hosting account is done: scope, infrastructure, database, authentication, projects and permissions, tasks and
 dependencies, CPM scheduling, the React frontend, real-time updates, edit-conflict handling, API hardening, tests and CI, load
 testing, deployment preparation, and documentation. **Not yet done:** a real deployment (needs your hosting account and
-secrets), a live link, the CI badge, and the demo video. Step 16 (interview preparation) is not a build step.
+secrets), a live link, the CI badge, and the demo video. Step 16 (interview preparation) is written up in
+[`docs/interview-prep.md`](docs/interview-prep.md).
