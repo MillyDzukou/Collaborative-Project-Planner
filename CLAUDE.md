@@ -29,6 +29,10 @@ export DATABASE_URL=postgres://planner:planner@localhost:5432/planner_test REDIS
 npm run migrate:up && npx vitest run
 ```
 
+Lint with `npm run lint` in `api/` and `web/`; CI runs lint, type-check, tests and build.
+E2E: `cd web && npm run e2e` (needs the stack up; `POST /auth/register` is limited to
+10/hour/IP, so restart the `api` container if you hit 429 during repeated runs).
+
 ## Conventions
 
 - API errors use `{ error: { code, message } }`; request bodies use camelCase unless an

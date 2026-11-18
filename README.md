@@ -125,6 +125,20 @@ docker compose --profile scale up -d api2     # second API on :4001
 cd api && node scripts/fanout-check.mjs       # writes via :4000, listens on :4001
 ```
 
+## Tests and CI
+
+| Layer | Tool | Run |
+|-------|------|-----|
+| API unit + integration (real Postgres/Redis) | Vitest + supertest | `cd api && npm test` (use the `planner_test` DB, see `CLAUDE.md`) |
+| WebSocket integration | Vitest + ws | included in `npm test` |
+| Lint / type-check | ESLint, `tsc` | `npm run lint`, `npx tsc --noEmit` in `api/` and `web/` |
+| End-to-end (browser) | Playwright | `cd web && npm run e2e` against the running stack (see `web/e2e/README.md`) |
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push to `main` and every
+PR: API (lint, type-check, migrate, test, build, prod `npm audit`), web (lint,
+build), then e2e (brings the stack up with Docker Compose and runs Playwright).
+A CI status badge will be added once the repository has a GitHub remote.
+
 ## API hardening
 
 - **Rate limiting:** 300 requests/min/IP globally; `POST /auth/login` allows 10
@@ -187,5 +201,8 @@ table, dependencies, Gantt view with critical tasks highlighted, read-only
 viewer mode), and real-time updates (cookie-authenticated WebSocket at
 `/ws?projectId=N`, members-only rooms, Redis pub/sub fan-out), and edit-conflict
 handling (versioned PATCH, 409 with current state, reapply/keep UI), and API
-hardening (see below). Next up is Step 12 (tests and CI) — see
+hardening (see below). Step 12 (tests and CI) is written but **not finished**:
+API unit/integration tests, ESLint and the GitHub Actions workflow are in place;
+the Playwright e2e specs are written but have not yet been run green. Next up:
+finish Step 12, then Step 13 — see
 [`docs/ai-build-guide.md`](docs/ai-build-guide.md).
