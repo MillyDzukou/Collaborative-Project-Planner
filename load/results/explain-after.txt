@@ -1,0 +1,33 @@
+--- A: membership role lookup (every authenticated project request)
+-----------------------------------------------------------------------------------------------------------
+ Index Scan using idx_project_members_user_id on project_members (actual time=0.031..0.031 rows=1 loops=1)
+ Execution Time: 0.167 ms
+--- B1: GET /projects list
+-------------------------------------------------------------------------------------------------------------------------------
+         ->  Index Only Scan using idx_project_members_user_id on project_members pm (actual time=0.067..0.068 rows=4 loops=1)
+         ->  Index Scan using projects_pkey on projects p (actual time=0.007..0.008 rows=1 loops=4)
+ Execution Time: 0.243 ms
+--- B2: GET /projects count
+----------------------------------------------------------------------------------------------------------------------
+   ->  Index Only Scan using idx_project_members_user_id on project_members (actual time=0.054..0.056 rows=4 loops=1)
+ Execution Time: 0.109 ms
+--- C: GET tasks page
+--------------------------------------------------------------------------------------------------------
+         ->  Bitmap Heap Scan on tasks (actual time=0.214..0.417 rows=20 loops=1)
+               ->  Bitmap Index Scan on idx_tasks_project_id (actual time=0.140..0.140 rows=20 loops=1)
+ Execution Time: 0.544 ms
+--- D1: schedule tasks
+--------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on tasks (actual time=0.030..0.061 rows=20 loops=1)
+   ->  Bitmap Index Scan on idx_tasks_project_id (actual time=0.023..0.023 rows=20 loops=1)
+ Execution Time: 0.138 ms
+--- D2: schedule dependencies
+-----------------------------------------------------------------------------------------------------------------------
+   ->  Bitmap Heap Scan on tasks t (actual time=0.022..0.047 rows=20 loops=1)
+         ->  Bitmap Index Scan on idx_tasks_project_id (actual time=0.017..0.018 rows=20 loops=1)
+   ->  Index Only Scan using task_dependencies_pkey on task_dependencies td (actual time=0.021..0.021 rows=1 loops=20)
+ Execution Time: 0.554 ms
+--- F: login lookup
+-------------------------------------------------------------------------------------
+ Index Scan using users_email_key on users (actual time=0.057..0.058 rows=1 loops=1)
+ Execution Time: 0.079 ms

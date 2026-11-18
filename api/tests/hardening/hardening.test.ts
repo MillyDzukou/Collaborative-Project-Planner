@@ -57,6 +57,26 @@ describe("API hardening", () => {
       expect(blocked.body.error.code).toBe("rate_limited");
     });
 
+    it("does not lock out a legitimate user after a burst of concurrent valid logins", async () => {
+      // Regression (found by Step 13 load testing): the limiter used to count its own 429s and
+      // successful-but-concurrent logins as "failures", keeping the IP blocked for the whole window.
+      const email = `burst-${Date.now()}@example.com`;
+      const password = "burst-password-123";
+      await request(app).post("/auth/register").send({ email, password, name: "Burst" }).expect(201);
+
+      const limited = createApp({ rateLimit: { login: 3 } });
+      const login = () => request(limited).post("/auth/login").send({ email, password });
+
+      const burst = await Promise.all(Array.from({ length: 8 }, login));
+      const statuses = burst.map((r) => r.status);
+      expect(statuses).toContain(429); // the flood is cut off while requests are in flight...
+      expect(statuses).toContain(200);
+
+      // ...but once they have finished, the same IP can log in again.
+      expect((await login()).status).toBe(200);
+      expect((await login()).status).toBe(200);
+    });
+
     it("applies a global cap to all routes", async () => {
       const limited = createApp({ rateLimit: { global: 2 } });
       // /health is registered before the limiter; use a limited route.

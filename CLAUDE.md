@@ -42,3 +42,9 @@ E2E: `cd web && npm run e2e` (needs the stack up; `POST /auth/register` is limit
 - New list endpoints must paginate with `parsePagination` and return `page: {limit, offset, total}`.
 - Log with `req.log` / `logger` (pino), never `console.log`.
 - Scheduling logic stays a pure function in `api/src/scheduling/computeSchedule.ts`.
+
+## Load testing
+
+`load/README.md` has the k6 workflow. The load stack is a separate compose project (`-p planner-load`, ports
+4100/5433/6380, `docker-compose.load.yml`, production API image). Never run `load/seed-bulk.sql` against the dev DB.
+When adding a query that filters on a column not covered by an index, check it with `EXPLAIN ANALYZE` (`load/explain.sql`).
