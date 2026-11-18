@@ -15,11 +15,12 @@ describe("task dependencies", () => {
   });
 
   it("rejects a task depending on itself with 422", async () => {
-    const { projectId } = await seedProject("self");
+    const { projectId, ownerCookie } = await seedProject("self");
     const taskId = await seedTask(projectId, { name: "A" });
 
     const res = await request(app)
       .post(`/tasks/${taskId}/dependencies`)
+      .set("Cookie", ownerCookie)
       .send({ dependsOnTaskId: taskId });
 
     expect(res.status).toBe(422);
@@ -27,23 +28,26 @@ describe("task dependencies", () => {
   });
 
   it("rejects a 3-task cycle: A->B, B->C, then C->A", async () => {
-    const { projectId } = await seedProject("cycle");
+    const { projectId, ownerCookie } = await seedProject("cycle");
     const a = await seedTask(projectId, { name: "A" });
     const b = await seedTask(projectId, { name: "B" });
     const c = await seedTask(projectId, { name: "C" });
 
     const first = await request(app)
       .post(`/tasks/${a}/dependencies`)
+      .set("Cookie", ownerCookie)
       .send({ dependsOnTaskId: b });
     expect(first.status).toBe(201);
 
     const second = await request(app)
       .post(`/tasks/${b}/dependencies`)
+      .set("Cookie", ownerCookie)
       .send({ dependsOnTaskId: c });
     expect(second.status).toBe(201);
 
     const third = await request(app)
       .post(`/tasks/${c}/dependencies`)
+      .set("Cookie", ownerCookie)
       .send({ dependsOnTaskId: a });
     expect(third.status).toBe(422);
     expect(third.body.error.code).toBe("dependency_cycle");
@@ -64,6 +68,7 @@ describe("task dependencies", () => {
 
     const res = await request(app)
       .post(`/tasks/${taskInProjectOne}/dependencies`)
+      .set("Cookie", projectOne.ownerCookie)
       .send({ dependsOnTaskId: taskInProjectTwo });
 
     expect(res.status).toBe(422);
@@ -71,18 +76,20 @@ describe("task dependencies", () => {
   });
 
   it("accepts a valid dependency chain", async () => {
-    const { projectId } = await seedProject("chain");
+    const { projectId, ownerCookie } = await seedProject("chain");
     const a = await seedTask(projectId, { name: "A" });
     const b = await seedTask(projectId, { name: "B" });
     const c = await seedTask(projectId, { name: "C" });
 
     const ab = await request(app)
       .post(`/tasks/${a}/dependencies`)
+      .set("Cookie", ownerCookie)
       .send({ dependsOnTaskId: b });
     expect(ab.status).toBe(201);
 
     const bc = await request(app)
       .post(`/tasks/${b}/dependencies`)
+      .set("Cookie", ownerCookie)
       .send({ dependsOnTaskId: c });
     expect(bc.status).toBe(201);
 
@@ -97,13 +104,16 @@ describe("task dependencies", () => {
   });
 
   it("removes a dependency", async () => {
-    const { projectId } = await seedProject("remove");
+    const { projectId, ownerCookie } = await seedProject("remove");
     const a = await seedTask(projectId, { name: "A" });
     const b = await seedTask(projectId, { name: "B" });
 
-    await request(app).post(`/tasks/${a}/dependencies`).send({ dependsOnTaskId: b });
+    await request(app)
+      .post(`/tasks/${a}/dependencies`)
+      .set("Cookie", ownerCookie)
+      .send({ dependsOnTaskId: b });
 
-    const del = await request(app).delete(`/tasks/${a}/dependencies/${b}`);
+    const del = await request(app).delete(`/tasks/${a}/dependencies/${b}`).set("Cookie", ownerCookie);
     expect(del.status).toBe(204);
 
     const check = await pool.query(
@@ -114,11 +124,11 @@ describe("task dependencies", () => {
   });
 
   it("returns 404 when removing a dependency that does not exist", async () => {
-    const { projectId } = await seedProject("remove-missing");
+    const { projectId, ownerCookie } = await seedProject("remove-missing");
     const a = await seedTask(projectId, { name: "A" });
     const b = await seedTask(projectId, { name: "B" });
 
-    const del = await request(app).delete(`/tasks/${a}/dependencies/${b}`);
+    const del = await request(app).delete(`/tasks/${a}/dependencies/${b}`).set("Cookie", ownerCookie);
     expect(del.status).toBe(404);
   });
 });

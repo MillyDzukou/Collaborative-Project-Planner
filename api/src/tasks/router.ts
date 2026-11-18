@@ -1,4 +1,6 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
+import { requireAuth } from "../auth/index.js";
+import { requireProjectRole } from "../projects/middleware.js";
 import { errorBody, HttpError } from "./http-error.js";
 import {
   parseCreateTaskInput,
@@ -27,8 +29,28 @@ function asyncHandler(
   };
 }
 
+async function resolveProjectIdParam(req: Request): Promise<number> {
+  return parseIntParam(req.params.id ?? "", "project id");
+}
+
+/**
+ * For task-scoped routes (`/tasks/:id`, `/tasks/:id/dependencies[...]`) the
+ * URL has no project id — it's derived from the task itself. Throws 404 if
+ * the task doesn't exist at all (before any membership/role check runs).
+ */
+async function resolveProjectIdFromTaskParam(req: Request): Promise<number> {
+  const taskId = parseIntParam(req.params.id ?? "", "task id");
+  const task = await getTaskById(taskId);
+  if (!task) {
+    throw new HttpError(404, "task_not_found", `task ${taskId} not found`);
+  }
+  return task.projectId;
+}
+
 tasksRouter.get(
   "/projects/:id/tasks",
+  requireAuth,
+  requireProjectRole("read", resolveProjectIdParam),
   asyncHandler(async (req, res) => {
     const projectId = parseIntParam(req.params.id ?? "", "project id");
     if (!(await projectExists(projectId))) {
@@ -41,7 +63,8 @@ tasksRouter.get(
 
 tasksRouter.post(
   "/projects/:id/tasks",
-  // TODO(step 5): enforce canPerform(role, action) here
+  requireAuth,
+  requireProjectRole("write", resolveProjectIdParam),
   asyncHandler(async (req, res) => {
     const projectId = parseIntParam(req.params.id ?? "", "project id");
     if (!(await projectExists(projectId))) {
@@ -55,7 +78,8 @@ tasksRouter.post(
 
 tasksRouter.patch(
   "/tasks/:id",
-  // TODO(step 5): enforce canPerform(role, action) here
+  requireAuth,
+  requireProjectRole("write", resolveProjectIdFromTaskParam),
   asyncHandler(async (req, res) => {
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const patch = parseUpdateTaskInput(req.body);
@@ -69,7 +93,8 @@ tasksRouter.patch(
 
 tasksRouter.delete(
   "/tasks/:id",
-  // TODO(step 5): enforce canPerform(role, action) here
+  requireAuth,
+  requireProjectRole("write", resolveProjectIdFromTaskParam),
   asyncHandler(async (req, res) => {
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const deleted = await deleteTask(taskId);
@@ -82,7 +107,8 @@ tasksRouter.delete(
 
 tasksRouter.post(
   "/tasks/:id/dependencies",
-  // TODO(step 5): enforce canPerform(role, action) here
+  requireAuth,
+  requireProjectRole("write", resolveProjectIdFromTaskParam),
   asyncHandler(async (req, res) => {
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const dependsOnTaskId = parseDependsOnTaskId(req.body);
@@ -93,7 +119,8 @@ tasksRouter.post(
 
 tasksRouter.delete(
   "/tasks/:id/dependencies/:dependsOnTaskId",
-  // TODO(step 5): enforce canPerform(role, action) here
+  requireAuth,
+  requireProjectRole("write", resolveProjectIdFromTaskParam),
   asyncHandler(async (req, res) => {
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const dependsOnTaskId = parseIntParam(
@@ -114,6 +141,8 @@ tasksRouter.delete(
 
 tasksRouter.get(
   "/tasks/:id",
+  requireAuth,
+  requireProjectRole("read", resolveProjectIdFromTaskParam),
   asyncHandler(async (req, res) => {
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const task = await getTaskById(taskId);
