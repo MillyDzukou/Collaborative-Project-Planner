@@ -1,0 +1,701 @@
+openapi: 3.0.3
+info:
+  title: Collaborative Project Planner API
+  version: 1.0.0
+  description: |
+    REST API for the Collaborative Project Planner. Hand-written from the Express routers (the routes validate
+    input with hand-rolled parsers and zod, not route schemas, so there is nothing to generate from) and kept
+    honest by `api/tests/docs/openapi.test.ts`, which fails if a route is added, removed or renamed without
+    updating this file.
+
+    **Authentication.** `POST /auth/login` sets an `httpOnly`, `Secure`, `SameSite=Lax` cookie named
+    `planner_token` (a 1-hour JWT). Every other route except `/health`, `/auth/register` and `/auth/login`
+    requires it. Behind the production nginx the API is reached at `/api/...` (the prefix is stripped).
+
+    **Errors.** Every error has the shape `{ "error": { "code", "message", "details"? } }`. A project the caller
+    is not a member of answers `404`, never `403`, so existence is not leaked. A non-integer `{id}` in any path
+    answers `400 invalid_request`.
+
+    **Rate limits (per IP).** 600 requests/min overall; `POST /auth/login` allows 10 failed attempts per 15 min;
+    `POST /auth/register` 10/hour. Exceeding a limit returns `429 rate_limited`.
+
+    **Real-time.** Besides REST there is a WebSocket at `/ws?projectId={id}` (not describable in OpenAPI):
+    authenticated by the same cookie, members only (`401`/`403`/`404`, or `400` for a non-integer `projectId`, on upgrade failure). After each successful
+    write the server pushes `{ "type", "projectId", "payload", "version"? }` where `type` is one of
+    `task.created`, `task.updated`, `task.deleted`, `dependency.added`, `dependency.removed`, `project.updated`,
+    `member.changed`, and an initial `{ "type": "connected", "projectId" }`.
+servers:
+  - url: http://localhost:4000
+    description: Local development (docker compose)
+  - url: http://localhost:8080/api
+    description: Local production rehearsal (docker-compose.prod.yml)
+tags:
+  - name: Auth
+  - name: Projects
+  - name: Members
+  - name: Tasks
+  - name: Dependencies
+  - name: Schedule
+  - name: Health
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness check
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email: { type: string, format: email, maxLength: 254 }
+                password: { type: string, minLength: 10, maxLength: 128 }
+                name: { type: string, minLength: 1, maxLength: 100 }
+      responses:
+        "201":
+          description: Account created (does not log in; call `/auth/login`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "409":
+          description: Email already registered (`EMAIL_ALREADY_REGISTERED`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and receive the session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: "Logged in; the response sets the `planner_token` cookie"
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401":
+          description: Wrong email or password (the same generic error for both)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Clear the session cookie
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: The current user
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          description: The logged-in user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+  /projects:
+    get:
+      tags: [Projects]
+      summary: Projects the caller is a member of
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: A page of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projects:
+                    type: array
+                    items: { $ref: "#/components/schemas/Project" }
+                  page: { $ref: "#/components/schemas/Page" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+    post:
+      tags: [Projects]
+      summary: Create a project (the caller becomes its owner)
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                description: { type: string, nullable: true, maxLength: 5000 }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project: { $ref: "#/components/schemas/Project" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+
+  /projects/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [Projects]
+      summary: Get a project (any member)
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          description: The project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project: { $ref: "#/components/schemas/Project" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Projects]
+      summary: Edit name/description (owner or editor)
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                description: { type: string, nullable: true, maxLength: 5000 }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project: { $ref: "#/components/schemas/Project" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Projects]
+      summary: Delete a project (owner only)
+      security: [{ cookieAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /projects/{id}/members:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [Members]
+      summary: List members (any member)
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: A page of members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  members:
+                    type: array
+                    items: { $ref: "#/components/schemas/Member" }
+                  page: { $ref: "#/components/schemas/Page" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Members]
+      summary: Invite a registered user by email (owner only)
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email: { type: string, maxLength: 254 }
+                role: { $ref: "#/components/schemas/Role" }
+      responses:
+        "201":
+          description: Member added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member: { $ref: "#/components/schemas/Member" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404":
+          description: Project not found for the caller, or no user registered with that email (`user_not_found`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Already a member (`already_member`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /projects/{id}/members/{userId}:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+      - name: userId
+        in: path
+        required: true
+        schema: { type: integer }
+    patch:
+      tags: [Members]
+      summary: Change a member's role (owner only)
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { $ref: "#/components/schemas/Role" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member: { $ref: "#/components/schemas/Member" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: Would leave the project without an owner (`last_owner_required`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    delete:
+      tags: [Members]
+      summary: Remove a member (owner only)
+      security: [{ cookieAuth: [] }]
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: Would remove the last owner (`last_owner_required`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /projects/{id}/tasks:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [Tasks]
+      summary: List tasks (any member)
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: A page of tasks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tasks:
+                    type: array
+                    items: { $ref: "#/components/schemas/Task" }
+                  page: { $ref: "#/components/schemas/Page" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      tags: [Tasks]
+      summary: Create a task (owner or editor)
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, duration_weeks]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                duration_weeks: { type: integer, minimum: 1, maximum: 10000 }
+                status: { type: string, maxLength: 50, default: pending }
+                assignee_id: { type: integer, nullable: true }
+                cost: { type: number, nullable: true }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task: { $ref: "#/components/schemas/Task" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /projects/{id}/dependencies:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [Dependencies]
+      summary: All finish-to-start dependency edges of a project (any member; not paginated)
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          description: Edges `taskId` depends on `dependsOnTaskId`
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dependencies:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        taskId: { type: integer }
+                        dependsOnTaskId: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /projects/{id}/schedule:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [Schedule]
+      summary: Critical-path schedule (any member)
+      description: Computes early/late start and finish, float and the critical flag for every task (CPM, finish-to-start).
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          description: The computed schedule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Schedule" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /tasks/{id}:
+    parameters:
+      - $ref: "#/components/parameters/TaskId"
+    get:
+      tags: [Tasks]
+      summary: Get a task (any member of its project)
+      security: [{ cookieAuth: [] }]
+      responses:
+        "200":
+          description: The task
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task: { $ref: "#/components/schemas/Task" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [Tasks]
+      summary: Update a task with optimistic concurrency (owner or editor)
+      description: |
+        `version` must be the version the client last saw. The update is a single compare-and-set; if someone else
+        changed the task first the response is `409 version_conflict` with the task's current state in
+        `error.details.current`, and nothing is written.
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: integer, minimum: 1 }
+                name: { type: string, minLength: 1, maxLength: 200 }
+                duration_weeks: { type: integer, minimum: 1, maximum: 10000 }
+                status: { type: string, maxLength: 50 }
+                assignee_id: { type: integer, nullable: true }
+                cost: { type: number, nullable: true }
+      responses:
+        "200":
+          description: Updated (version incremented)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task: { $ref: "#/components/schemas/Task" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Stale `version` (`version_conflict`); `error.details.current` is the latest task
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    delete:
+      tags: [Tasks]
+      summary: Delete a task (owner or editor)
+      security: [{ cookieAuth: [] }]
+      responses:
+        "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /tasks/{id}/dependencies:
+    parameters:
+      - $ref: "#/components/parameters/TaskId"
+    post:
+      tags: [Dependencies]
+      summary: Make this task depend on another task of the same project (owner or editor)
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dependsOnTaskId]
+              properties:
+                dependsOnTaskId: { type: integer }
+      responses:
+        "201":
+          description: Dependency created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskId: { type: integer }
+                  dependsOnTaskId: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: Rejected (`self_dependency`, `cross_project_dependency` or `dependency_cycle`)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /tasks/{id}/dependencies/{dependsOnTaskId}:
+    parameters:
+      - $ref: "#/components/parameters/TaskId"
+      - name: dependsOnTaskId
+        in: path
+        required: true
+        schema: { type: integer }
+    delete:
+      tags: [Dependencies]
+      summary: Remove a dependency (owner or editor)
+      security: [{ cookieAuth: [] }]
+      responses:
+        "204": { description: Removed }
+        "401": { $ref: "#/components/responses/Unauthenticated" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: planner_token
+  parameters:
+    ProjectId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    TaskId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    Offset:
+      name: offset
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+  responses:
+    BadRequest:
+      description: Invalid input (`invalid_request`, `invalid_json`, `VALIDATION_ERROR`)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthenticated:
+      description: Missing or invalid session cookie
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Member, but the role may not do this (`forbidden`)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Not found, or the caller is not a member of the project
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    RateLimited:
+      description: Too many requests (`rate_limited`)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: {}
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        name: { type: string }
+    Role:
+      type: string
+      enum: [owner, editor, viewer]
+    Project:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        createdBy: { type: integer }
+        createdAt: { type: string, format: date-time }
+    Member:
+      type: object
+      properties:
+        projectId: { type: integer }
+        userId: { type: integer }
+        role: { $ref: "#/components/schemas/Role" }
+        email: { type: string }
+        name: { type: string }
+    Task:
+      type: object
+      properties:
+        id: { type: integer }
+        projectId: { type: integer }
+        name: { type: string }
+        durationWeeks: { type: integer }
+        status: { type: string }
+        assigneeId: { type: integer, nullable: true }
+        cost: { type: string, nullable: true, description: Decimal returned as a string }
+        version: { type: integer, description: Increments on every update; send it back on PATCH }
+        updatedAt: { type: string, format: date-time }
+    Page:
+      type: object
+      properties:
+        limit: { type: integer }
+        offset: { type: integer }
+        total: { type: integer }
+    Schedule:
+      type: object
+      properties:
+        projectDurationWeeks: { type: integer }
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              earlyStart: { type: integer }
+              earlyFinish: { type: integer }
+              lateStart: { type: integer }
+              lateFinish: { type: integer }
+              float: { type: integer }
+              critical: { type: boolean }
