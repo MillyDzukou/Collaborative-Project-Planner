@@ -7,6 +7,9 @@ async function seed() {
      ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
      RETURNING id`,
   );
+  if (!user) {
+    throw new Error("seed: failed to insert or find demo user");
+  }
 
   const { rows: [project] } = await pool.query<{ id: number }>(
     `INSERT INTO projects (name, description, created_by)
@@ -14,6 +17,9 @@ async function seed() {
      RETURNING id`,
     [user.id],
   );
+  if (!project) {
+    throw new Error("seed: failed to insert demo project");
+  }
 
   await pool.query(
     `INSERT INTO project_members (project_id, user_id, role)
