@@ -64,7 +64,7 @@ own machine, then check that the `ip` field in the API's request logs is your pu
 
 ## Deploying on Render (Blueprint)
 
-1. Push this repository to GitHub (there is no remote yet).
+1. The repository is already on GitHub (`MillyDzukou/Collaborative-Project-Planner`, public) with CI passing; Render deploys from there.
 2. Render dashboard → **New → Blueprint** → select the repo. Review the services it proposes from
    `render.yaml` (Postgres, Redis, private API, public web), and the plans/costs.
 3. Apply. The first deploy builds both images; the API's **pre-deploy command** (`npm run migrate:up`)
