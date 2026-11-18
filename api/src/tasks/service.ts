@@ -17,6 +17,20 @@ export async function listTasksForProject(projectId: number): Promise<Task[]> {
   return rows.map(toTask);
 }
 
+export async function listDependenciesForProject(
+  projectId: number,
+): Promise<{ taskId: number; dependsOnTaskId: number }[]> {
+  const { rows } = await pool.query<DependencyEdgeRow>(
+    `SELECT td.task_id, td.depends_on_task_id
+       FROM task_dependencies td
+       JOIN tasks t ON t.id = td.task_id
+      WHERE t.project_id = $1
+      ORDER BY td.task_id, td.depends_on_task_id`,
+    [projectId],
+  );
+  return rows.map((r) => ({ taskId: r.task_id, dependsOnTaskId: r.depends_on_task_id }));
+}
+
 export async function createTask(projectId: number, input: CreateTaskInput): Promise<Task> {
   const { rows } = await pool.query<TaskRow>(
     `INSERT INTO tasks (project_id, name, duration_weeks, status, assignee_id, cost)

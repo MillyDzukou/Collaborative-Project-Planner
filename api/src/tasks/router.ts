@@ -13,6 +13,7 @@ import {
   createTask,
   deleteTask,
   getTaskById,
+  listDependenciesForProject,
   listTasksForProject,
   projectExists,
   removeDependency,
@@ -58,6 +59,16 @@ tasksRouter.get(
     }
     const tasks = await listTasksForProject(projectId);
     res.status(200).json({ tasks });
+  }),
+);
+
+tasksRouter.get(
+  "/projects/:id/dependencies",
+  requireAuth,
+  requireProjectRole("read", resolveProjectIdParam),
+  asyncHandler(async (req, res) => {
+    const dependencies = await listDependenciesForProject(req.projectId!);
+    res.status(200).json({ dependencies });
   }),
 );
 
