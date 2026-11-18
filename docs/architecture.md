@@ -43,7 +43,7 @@ sequenceDiagram
   participant API2 as API instance 2
   participant B as Browser B (viewer)
 
-  A->>API1: PATCH /tasks/42 {version: 3, durationWeeks: 5}
+  A->>API1: PATCH /tasks/42 {version: 3, duration_weeks: 5}
   API1->>API1: cookie -> user; role check (canPerform write)
   API1->>PG: UPDATE tasks SET ..., version = version + 1<br/>WHERE id = 42 AND version = 3
   alt row updated

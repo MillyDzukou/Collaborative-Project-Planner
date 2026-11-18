@@ -13,13 +13,14 @@ info:
     requires it. Behind the production nginx the API is reached at `/api/...` (the prefix is stripped).
 
     **Errors.** Every error has the shape `{ "error": { "code", "message", "details"? } }`. A project the caller
-    is not a member of answers `404`, never `403`, so existence is not leaked.
+    is not a member of answers `404`, never `403`, so existence is not leaked. A non-integer `{id}` in any path
+    answers `400 invalid_request`.
 
     **Rate limits (per IP).** 600 requests/min overall; `POST /auth/login` allows 10 failed attempts per 15 min;
     `POST /auth/register` 10/hour. Exceeding a limit returns `429 rate_limited`.
 
     **Real-time.** Besides REST there is a WebSocket at `/ws?projectId={id}` (not describable in OpenAPI):
-    authenticated by the same cookie, members only (`401`/`404`/`403` on upgrade failure). After each successful
+    authenticated by the same cookie, members only (`401`/`403`/`404`, or `400` for a non-integer `projectId`, on upgrade failure). After each successful
     write the server pushes `{ "type", "projectId", "payload", "version"? }` where `type` is one of
     `task.created`, `task.updated`, `task.deleted`, `dependency.added`, `dependency.removed`, `project.updated`,
     `member.changed`, and an initial `{ "type": "connected", "projectId" }`.
