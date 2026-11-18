@@ -26,6 +26,14 @@ function badRequest(message: string): never {
   throw new HttpError(400, "invalid_request", message);
 }
 
+const MAX_NAME = 200;
+const MAX_STATUS = 50;
+const MAX_DURATION_WEEKS = 10_000;
+
+function checkLength(value: string, max: number, field: string): void {
+  if (value.length > max) badRequest(`${field} must be at most ${max} characters`);
+}
+
 export function parseIntParam(raw: string, label: string): number {
   if (!/^-?\d+$/.test(raw)) {
     badRequest(`${label} must be an integer`);
@@ -43,9 +51,13 @@ export function parseCreateTaskInput(body: unknown): CreateTaskInput {
   if (typeof name !== "string" || name.trim().length === 0) {
     badRequest("name is required and must be a non-empty string");
   }
+  checkLength(name, MAX_NAME, "name");
 
   if (typeof durationWeeks !== "number" || !Number.isInteger(durationWeeks) || durationWeeks <= 0) {
     badRequest("duration_weeks is required and must be an integer > 0");
+  }
+  if (durationWeeks > MAX_DURATION_WEEKS) {
+    badRequest(`duration_weeks must be at most ${MAX_DURATION_WEEKS}`);
   }
 
   let resolvedStatus = "pending";
@@ -53,6 +65,7 @@ export function parseCreateTaskInput(body: unknown): CreateTaskInput {
     if (typeof status !== "string" || status.trim().length === 0) {
       badRequest("status must be a non-empty string");
     }
+    checkLength(status, MAX_STATUS, "status");
     resolvedStatus = status;
   }
 
@@ -98,6 +111,7 @@ export function parseUpdateTaskInput(body: unknown): UpdateTaskInput {
     if (typeof name !== "string" || name.trim().length === 0) {
       badRequest("name must be a non-empty string");
     }
+    checkLength(name, MAX_NAME, "name");
     result.name = name;
   }
 
@@ -105,6 +119,9 @@ export function parseUpdateTaskInput(body: unknown): UpdateTaskInput {
     const durationWeeks = body.duration_weeks;
     if (typeof durationWeeks !== "number" || !Number.isInteger(durationWeeks) || durationWeeks <= 0) {
       badRequest("duration_weeks must be an integer > 0");
+    }
+    if (durationWeeks > MAX_DURATION_WEEKS) {
+      badRequest(`duration_weeks must be at most ${MAX_DURATION_WEEKS}`);
     }
     result.durationWeeks = durationWeeks;
   }
@@ -114,6 +131,7 @@ export function parseUpdateTaskInput(body: unknown): UpdateTaskInput {
     if (typeof status !== "string" || status.trim().length === 0) {
       badRequest("status must be a non-empty string");
     }
+    checkLength(status, MAX_STATUS, "status");
     result.status = status;
   }
 

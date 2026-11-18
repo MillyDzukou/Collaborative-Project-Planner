@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 import { pool } from "../db/pool.js";
 import { HttpError } from "./http-error.js";
+import type { Pagination } from "../http/pagination.js";
 import type { CreateTaskInput, UpdateTaskInput } from "./validation.js";
 import { type DependencyEdgeRow, type TaskRow, toTask, type Task } from "./types.js";
 
@@ -9,12 +10,15 @@ export async function projectExists(projectId: number): Promise<boolean> {
   return (rowCount ?? 0) > 0;
 }
 
-export async function listTasksForProject(projectId: number): Promise<Task[]> {
-  const { rows } = await pool.query<TaskRow>(
-    "SELECT * FROM tasks WHERE project_id = $1 ORDER BY id ASC",
-    [projectId],
-  );
-  return rows.map(toTask);
+export async function listTasksForProject(
+  projectId: number,
+  { limit, offset }: Pagination,
+): Promise<{ items: Task[]; total: number }> {
+  const [{ rows }, count] = await Promise.all([
+    pool.query<TaskRow>("SELECT * FROM tasks WHERE project_id = $1 ORDER BY id ASC LIMIT $2 OFFSET $3", [projectId, limit, offset]),
+    pool.query<{ n: string }>("SELECT count(*) AS n FROM tasks WHERE project_id = $1", [projectId]),
+  ]);
+  return { items: rows.map(toTask), total: Number(count.rows[0]?.n ?? 0) };
 }
 
 export async function listDependenciesForProject(

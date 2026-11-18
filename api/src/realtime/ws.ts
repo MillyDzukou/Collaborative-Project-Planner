@@ -27,7 +27,7 @@ function reject(socket: Duplex, status: string): void {
  * the project's room. Events arrive via Redis pub/sub so any API instance can
  * originate a change and every instance forwards it to its own clients.
  */
-export function attachRealtime(server: Server): void {
+export function attachRealtime(server: Server): { close: () => void } {
   const wss = new WebSocketServer({ noServer: true });
   const rooms = new Map<number, Set<WebSocket>>();
   const subscriber = redis.duplicate();
@@ -62,7 +62,8 @@ export function attachRealtime(server: Server): void {
 
     // Cookies are sent automatically by browsers, so guard against cross-site
     // WebSocket hijacking by checking Origin against the allowed web origin.
-    if (req.headers.origin !== config.webOrigin && req.headers.origin !== undefined) {
+    const origin = req.headers.origin;
+    if (origin !== undefined && !config.webOrigins.includes(origin)) {
       return reject(socket, "403 Forbidden");
     }
 
@@ -87,4 +88,12 @@ export function attachRealtime(server: Server): void {
       });
     })().catch(() => reject(socket, "500 Internal Server Error"));
   });
+
+  return {
+    close: () => {
+      for (const client of wss.clients) client.close(1001, "server shutting down");
+      wss.close();
+      void subscriber.quit();
+    },
+  };
 }

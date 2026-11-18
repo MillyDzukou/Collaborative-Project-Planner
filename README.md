@@ -125,6 +125,33 @@ docker compose --profile scale up -d api2     # second API on :4001
 cd api && node scripts/fanout-check.mjs       # writes via :4000, listens on :4001
 ```
 
+## API hardening
+
+- **Rate limiting:** 300 requests/min/IP globally; `POST /auth/login` allows 10
+  *failed* attempts per 15 min (successes don't count); `POST /auth/register`
+  10/hour. Over the limit → `429 rate_limited`. Set `TRUST_PROXY` to the number
+  of reverse-proxy hops when deployed so the real client IP is used.
+- **Headers/CORS:** `helmet` defaults; CORS and the WebSocket `Origin` check use
+  the `WEB_ORIGIN` allow-list (comma-separated), nothing else.
+- **Errors:** every failure is `{ error: { code, message } }` from one central
+  handler; 5xx never leaks internals. Malformed JSON → 400, oversized body
+  (>100 kb) → 413, unknown route → 404.
+- **Validation:** all inputs validated with length caps (names ≤ 200 chars,
+  descriptions ≤ 5000, passwords ≤ 128 to bound argon2 work, …).
+- **Logging:** structured `pino` JSON logs, one line per request with a request
+  id (`X-Request-Id`, echoed back; a safe caller-supplied id is honoured).
+  Cookies and auth headers are redacted. `LOG_LEVEL` controls verbosity.
+- **Pagination:** list endpoints (`/projects`, `/projects/:id/tasks`,
+  `/projects/:id/members`) accept `?limit=` (default 50, max 200) and
+  `?offset=` and return `page: { limit, offset, total }`. The web app follows
+  pages automatically.
+- **Shutdown:** `SIGTERM`/`SIGINT` stop accepting connections, close WebSockets,
+  drain in-flight requests, then close Postgres and Redis (10 s hard limit).
+- **Secrets:** the API refuses to start in production with the default
+  `JWT_SECRET`.
+- **Dependencies:** `npm audit --omit=dev` is clean (zod upgraded to 4.x). The
+  remaining advisories are dev-only tooling (vitest/vite/esbuild).
+
 ## Design decisions
 
 - **PostgreSQL**, not a document store: the data (users, projects, tasks,
@@ -151,7 +178,7 @@ cd api && node scripts/fanout-check.mjs       # writes via :4000, listens on :40
 
 ## Status
 
-Steps 1-10 are done: scope defined, infra scaffolded, the database designed,
+Steps 1-11 are done: scope defined, infra scaffolded, the database designed,
 authentication (register/login/logout/me), projects and permissions
 (roles, membership, last-owner protection), tasks and dependencies (CRUD,
 cycle/cross-project rejection), the CPM scheduling engine, the React
@@ -159,6 +186,6 @@ frontend (login/register, project list, board with inline-editable task
 table, dependencies, Gantt view with critical tasks highlighted, read-only
 viewer mode), and real-time updates (cookie-authenticated WebSocket at
 `/ws?projectId=N`, members-only rooms, Redis pub/sub fan-out), and edit-conflict
-handling (versioned PATCH, 409 with current state, reapply/keep UI). Next up is
-Step 11 (harden the API) — see
+handling (versioned PATCH, 409 with current state, reapply/keep UI), and API
+hardening (see below). Next up is Step 12 (tests and CI) — see
 [`docs/ai-build-guide.md`](docs/ai-build-guide.md).

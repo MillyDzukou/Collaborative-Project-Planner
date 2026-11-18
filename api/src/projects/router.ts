@@ -1,7 +1,8 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { requireAuth } from "../auth/index.js";
 import { publishProjectEvent } from "../realtime/events.js";
-import { errorBody, HttpError } from "../tasks/http-error.js";
+import { HttpError } from "../tasks/http-error.js";
+import { parsePagination } from "../http/pagination.js";
 import { parseIntParam } from "../tasks/validation.js";
 import { requireProjectRole } from "./middleware.js";
 import {
@@ -38,8 +39,9 @@ projectsRouter.get(
   "/projects",
   requireAuth,
   asyncHandler(async (req, res) => {
-    const projects = await listProjectsForUser(req.user!.id);
-    res.status(200).json({ projects });
+    const { limit, offset } = parsePagination(req.query);
+    const { items, total } = await listProjectsForUser(req.user!.id, { limit, offset });
+    res.status(200).json({ projects: items, page: { limit, offset, total } });
   }),
 );
 
@@ -103,8 +105,9 @@ projectsRouter.get(
   requireAuth,
   requireProjectRole("read", resolveProjectIdParam),
   asyncHandler(async (req, res) => {
-    const members = await listMembers(req.projectId!);
-    res.status(200).json({ members });
+    const { limit, offset } = parsePagination(req.query);
+    const { items, total } = await listMembers(req.projectId!, { limit, offset });
+    res.status(200).json({ members: items, page: { limit, offset, total } });
   }),
 );
 
@@ -150,13 +153,3 @@ projectsRouter.delete(
     res.status(204).send();
   }),
 );
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-projectsRouter.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-  if (err instanceof HttpError) {
-    res.status(err.status).json(errorBody(err.code, err.message));
-    return;
-  }
-  console.error(err);
-  res.status(500).json(errorBody("internal_error", "an unexpected error occurred"));
-});

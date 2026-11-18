@@ -24,6 +24,14 @@ function badRequest(message: string): never {
   throw new HttpError(400, "invalid_request", message);
 }
 
+const MAX_NAME = 200;
+const MAX_DESCRIPTION = 5000;
+const MAX_EMAIL = 254;
+
+function checkLength(value: string, max: number, field: string): void {
+  if (value.length > max) badRequest(`${field} must be at most ${max} characters`);
+}
+
 export function parseCreateProjectInput(body: unknown): CreateProjectInput {
   if (!isRecord(body)) {
     badRequest("request body must be a JSON object");
@@ -33,12 +41,14 @@ export function parseCreateProjectInput(body: unknown): CreateProjectInput {
   if (typeof name !== "string" || name.trim().length === 0) {
     badRequest("name is required and must be a non-empty string");
   }
+  checkLength(name, MAX_NAME, "name");
 
   let resolvedDescription: string | null = null;
   if (description !== undefined && description !== null) {
     if (typeof description !== "string") {
       badRequest("description must be a string");
     }
+    checkLength(description, MAX_DESCRIPTION, "description");
     resolvedDescription = description;
   }
 
@@ -57,6 +67,7 @@ export function parseUpdateProjectInput(body: unknown): UpdateProjectInput {
     if (typeof name !== "string" || name.trim().length === 0) {
       badRequest("name must be a non-empty string");
     }
+    checkLength(name, MAX_NAME, "name");
     result.name = name;
   }
 
@@ -65,6 +76,7 @@ export function parseUpdateProjectInput(body: unknown): UpdateProjectInput {
     if (description !== null && typeof description !== "string") {
       badRequest("description must be a string or null");
     }
+    if (typeof description === "string") checkLength(description, MAX_DESCRIPTION, "description");
     result.description = description as string | null;
   }
 
@@ -84,6 +96,7 @@ export function parseInviteMemberInput(body: unknown): InviteMemberInput {
   if (typeof email !== "string" || email.trim().length === 0) {
     badRequest("email is required and must be a non-empty string");
   }
+  checkLength(email, MAX_EMAIL, "email");
   if (!isProjectRole(role)) {
     badRequest("role is required and must be one of owner, editor, viewer");
   }

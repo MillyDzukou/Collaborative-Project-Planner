@@ -33,4 +33,8 @@ npm run migrate:up && npx vitest run
 
 - API errors use `{ error: { code, message } }`; request bodies use camelCase unless an
   existing endpoint says otherwise (task create/update use `duration_weeks`, `assignee_id`).
+- Throw `HttpError` (or let errors propagate); never write per-router error handlers — the
+  central `errorHandler` in `api/src/http/errorHandler.ts` formats everything.
+- New list endpoints must paginate with `parsePagination` and return `page: {limit, offset, total}`.
+- Log with `req.log` / `logger` (pino), never `console.log`.
 - Scheduling logic stays a pure function in `api/src/scheduling/computeSchedule.ts`.
