@@ -1,1 +1,10 @@
 Collaborative Planner Build Guide.docx
+
+node_modules/
+dist/
+build/
+coverage/
+.env
+*.local
+.DS_Store
+npm-debug.log*
