@@ -127,5 +127,8 @@ container — these commands are for running migrations from the host.)
 
 ## Status
 
-Scope defined (Step 1), infra scaffolded (Step 2) — no application code yet.
-Follow [`docs/ai-build-guide.md`](docs/ai-build-guide.md) starting at Step 3.
+Steps 1-4, 6, and 7 are done: scope defined, infra scaffolded, the database
+designed, authentication (register/login/logout/me), tasks and dependencies
+(CRUD, cycle/cross-project rejection), and the CPM scheduling engine. Next up
+is Step 5 (projects and permissions) — see
+[`docs/ai-build-guide.md`](docs/ai-build-guide.md).
