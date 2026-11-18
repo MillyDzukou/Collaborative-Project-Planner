@@ -83,7 +83,7 @@ them); do the real deploy and verify `TRUST_PROXY` and HTTPS cookies; add a Post
 
 ### 4c. Browser testing found a bug that unit tests missed
 
-- Writing the first real Playwright run exposed that after login the UI stayed on the sign-up form: clearing the whole React Query cache
+- Writing the first real Playwright run exposed that after a successful login the UI never left the login form: clearing the whole React Query cache
   detached the "current user" query the app was watching. API tests were all green; only a real browser caught it. Fixed by removing every
   query except `me`.
 - Same run showed that live events refetched five queries each, which let a few clients on one IP exhaust the rate limit. Fix: refetch only
@@ -101,8 +101,8 @@ them); do the real deploy and verify `TRUST_PROXY` and HTTPS cookies; add a Post
 The project was built with Claude Code: each step in its own git worktree, an independent review agent checking and merging each step
 (`docs/ai-build-guide.md`, `CLAUDE.md`). A truthful, confident way to say it:
 
-> "I used an AI coding assistant and structured the process so I could trust the result: every step had tests, every step was reviewed
-> by a separate agent that re-ran the checks, and between the tests, the load testing and the reviews we caught real problems: a
+> "I used an AI coding assistant and structured the process so I could trust the result: the feature steps had tests, steps were reviewed
+> by a separate agent before merging (the 'Step N review' commits in git log), and between the tests, the load testing and the reviews we caught real problems: a
 > shutdown crash, a login lockout, and an error path that would have hung requests.
 > I made the design decisions, and I can walk through any part of the code."
 
@@ -123,7 +123,7 @@ Recommended:
 - Implemented **optimistic concurrency control** (version-checked atomic `UPDATE`, `409` with current state, reapply/keep UI); verified with a
   concurrency test where 10 simultaneous writers produce exactly one success.
 - **Load-tested with k6 on a 1M-task dataset** and used `EXPLAIN ANALYZE` to find a sequential scan on the project list; one composite index cut
-  the query from 20.4 ms to 0.24 ms and p95 list latency from 433 ms to 106 ms; held 1,000 concurrent WebSocket connections with a 477 ms p95
+  the query plan from 20.4 ms to 0.24 ms, and p95 list latency went from 433 ms to 106 ms between two single runs; held 1,000 concurrent WebSocket connections with a 477 ms p95
   write-to-socket delivery latency (single-machine test).
 - Wrote **90 integration/unit tests** (real Postgres/Redis), **5 Playwright end-to-end flows** (including live updates across two browsers),
   and a GitHub Actions workflow; hardened the API with rate limiting, helmet, central error handling, structured logging and pagination.
@@ -132,7 +132,7 @@ Shorter alternatives:
 - Built a real-time collaborative critical-path planner (React, Express, PostgreSQL, Redis, WebSockets) with role-based access, optimistic-concurrency conflict handling and live updates.
 - Cut a hot query 85× (20.4 → 0.24 ms) after finding a missing index with `EXPLAIN ANALYZE` during k6 load testing on a 1M-row dataset.
 
-(`20.4 / 0.24` is about 85×; use "85×" only if you also say it is one query on a seeded dataset; the end-to-end p95 improved about 4×.)
+(`20.4 / 0.24` is about 85×; use "85×" only if you also say it is one query on a seeded dataset; the end-to-end p95s in the same runs improved about 2 to 4× (patch 2×, list 4×), and that is a single before/after run each.)
 
 If asked "was it deployed?": "Not yet. It's prepared and rehearsed locally with production images and an nginx proxy, and I have a deploy
 config ready, but I haven't put it on a host." That is a fine answer; "deployed" if it wasn't is not.
@@ -146,17 +146,18 @@ project) enforce integrity in the database, not only in code.
 create a cycle and rejects with 422; self-dependency and cross-project edges are rejected too. The scheduler also throws on a cycle rather than looping.
 
 **How does real-time work across multiple servers?** Redis pub/sub. A write publishes to `project:<id>`; each instance subscribes only for rooms
-with connected clients and forwards to them. `scripts/fanout-check.mjs` proves a write through instance A reaches a socket on instance B (about
-19 ms locally).
+with connected clients and forwards to them. `scripts/fanout-check.mjs` proves a write through instance A reaches a socket on instance B (it prints the measured delay; I have no recorded figure, so don't quote one).
 
 **What if Redis is down?** Writes still succeed (publish failures are caught and logged, never thrown), but clients don't get live events; the web
-app refetches everything when its socket reconnects. Pub/sub is fire-and-forget, so there's no replay of missed events. I have not tested a Redis
-outage end to end; I'd say so.
+app refetches everything when its socket reconnects. Pub/sub is fire-and-forget, so there's no replay of missed events, and a Redis outage does
+not itself drop the browsers' WebSockets, so a client would not necessarily refetch what it missed until the next reconnect or reload. I have not
+tested a Redis outage end to end; I'd say so.
 
-**How are permissions enforced?** One function, `canPerform(role, action)`, called on every request via middleware; the UI hiding buttons is not a
-control. Non-members get 404, not 403, so a project's existence isn't leaked, and the same applies to WebSocket upgrades.
+**How are permissions enforced?** One function, `canPerform(role, action)`, called by the `requireProjectRole` middleware on every project-scoped REST route; the UI hiding buttons is not a
+control. Non-members get 404, not 403, so a project's existence isn't leaked, and WebSocket upgrades also return 404 for non-members (that check is a
+membership lookup, not `canPerform`).
 
-**What would break first under load?** Login: argon2 is deliberately CPU-heavy and shares the libuv threadpool (4 threads by default). Also: rate-limit
+**What would break first under load?** Probably login (the load write-up names it the next ceiling, not something I saw fail): argon2 is deliberately CPU-heavy and shares the libuv threadpool (4 threads by default). Also: rate-limit
 counters are per-process, so they aren't global across instances; and the schedule is recomputed on every request (fine at the tested sizes).
 
 **How do you know your load numbers are trustworthy?** Be candid: single runs on a laptop where k6, the API and Postgres compete for CPU; I trust the
