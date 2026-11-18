@@ -127,9 +127,11 @@ container — these commands are for running migrations from the host.)
 
 ## Status
 
-Steps 1-7 are done: scope defined, infra scaffolded, the database designed,
+Steps 1-8 are done: scope defined, infra scaffolded, the database designed,
 authentication (register/login/logout/me), projects and permissions
 (roles, membership, last-owner protection), tasks and dependencies (CRUD,
-cycle/cross-project rejection), and the CPM scheduling engine. Next up is
-Step 8 (the React frontend) — see
+cycle/cross-project rejection), the CPM scheduling engine, and the React
+frontend (login/register, project list, board with inline-editable task
+table, dependencies, Gantt view with critical tasks highlighted, read-only
+viewer mode). Next up is Step 9 (real-time updates) — see
 [`docs/ai-build-guide.md`](docs/ai-build-guide.md).
