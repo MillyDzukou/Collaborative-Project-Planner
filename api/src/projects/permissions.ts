@@ -6,7 +6,7 @@
  */
 export type ProjectRole = "owner" | "editor" | "viewer";
 
-export type ProjectAction = "read" | "manage_tasks" | "manage_members" | "manage_project";
+export type ProjectAction = "read" | "write" | "manage_members" | "manage_project";
 
 export function canPerform(role: ProjectRole | null, action: ProjectAction): boolean {
   if (role === null) {
@@ -16,7 +16,10 @@ export function canPerform(role: ProjectRole | null, action: ProjectAction): boo
   switch (action) {
     case "read":
       return role === "owner" || role === "editor" || role === "viewer";
-    case "manage_tasks":
+    case "write":
+      // Owner-or-editor mutating access: managing tasks/dependencies AND
+      // editing a project's own name/description both live here, since both
+      // are "any non-viewer member can change this" actions.
       return role === "owner" || role === "editor";
     case "manage_members":
     case "manage_project":

@@ -67,12 +67,12 @@ projectsRouter.get(
 
 // Editing a project's own name/description is an editor-or-owner action,
 // distinct from the owner-only `manage_project` action (reserved for
-// destructive operations like delete below), so this reuses `manage_tasks`'s
-// "owner or editor" semantics rather than `manage_project`.
+// destructive operations like delete below), so this uses the generic
+// "write" action rather than `manage_project`.
 projectsRouter.patch(
   "/projects/:id",
   requireAuth,
-  requireProjectRole("manage_tasks", resolveProjectIdParam),
+  requireProjectRole("write", resolveProjectIdParam),
   asyncHandler(async (req, res) => {
     const patch = parseUpdateProjectInput(req.body);
     const project = await updateProject(req.projectId!, patch);

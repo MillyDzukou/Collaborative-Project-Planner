@@ -64,7 +64,7 @@ tasksRouter.get(
 tasksRouter.post(
   "/projects/:id/tasks",
   requireAuth,
-  requireProjectRole("manage_tasks", resolveProjectIdParam),
+  requireProjectRole("write", resolveProjectIdParam),
   asyncHandler(async (req, res) => {
     const projectId = parseIntParam(req.params.id ?? "", "project id");
     if (!(await projectExists(projectId))) {
@@ -79,7 +79,7 @@ tasksRouter.post(
 tasksRouter.patch(
   "/tasks/:id",
   requireAuth,
-  requireProjectRole("manage_tasks", resolveProjectIdFromTaskParam),
+  requireProjectRole("write", resolveProjectIdFromTaskParam),
   asyncHandler(async (req, res) => {
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const patch = parseUpdateTaskInput(req.body);
@@ -94,7 +94,7 @@ tasksRouter.patch(
 tasksRouter.delete(
   "/tasks/:id",
   requireAuth,
-  requireProjectRole("manage_tasks", resolveProjectIdFromTaskParam),
+  requireProjectRole("write", resolveProjectIdFromTaskParam),
   asyncHandler(async (req, res) => {
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const deleted = await deleteTask(taskId);
@@ -108,7 +108,7 @@ tasksRouter.delete(
 tasksRouter.post(
   "/tasks/:id/dependencies",
   requireAuth,
-  requireProjectRole("manage_tasks", resolveProjectIdFromTaskParam),
+  requireProjectRole("write", resolveProjectIdFromTaskParam),
   asyncHandler(async (req, res) => {
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const dependsOnTaskId = parseDependsOnTaskId(req.body);
@@ -120,7 +120,7 @@ tasksRouter.post(
 tasksRouter.delete(
   "/tasks/:id/dependencies/:dependsOnTaskId",
   requireAuth,
-  requireProjectRole("manage_tasks", resolveProjectIdFromTaskParam),
+  requireProjectRole("write", resolveProjectIdFromTaskParam),
   asyncHandler(async (req, res) => {
     const taskId = parseIntParam(req.params.id ?? "", "task id");
     const dependsOnTaskId = parseIntParam(

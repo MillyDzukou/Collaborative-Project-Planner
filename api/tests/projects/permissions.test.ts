@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { canPerform, type ProjectAction, type ProjectRole } from "../../src/projects/permissions.js";
 
 const roles: ProjectRole[] = ["owner", "editor", "viewer"];
-const actions: ProjectAction[] = ["read", "manage_tasks", "manage_members", "manage_project"];
+const actions: ProjectAction[] = ["read", "write", "manage_members", "manage_project"];
 
 describe("canPerform", () => {
   it("null role (non-member) can never perform any action", () => {
@@ -17,10 +17,10 @@ describe("canPerform", () => {
     }
   });
 
-  it("owner and editor can manage_tasks, viewer cannot", () => {
-    expect(canPerform("owner", "manage_tasks")).toBe(true);
-    expect(canPerform("editor", "manage_tasks")).toBe(true);
-    expect(canPerform("viewer", "manage_tasks")).toBe(false);
+  it("owner and editor can write, viewer cannot", () => {
+    expect(canPerform("owner", "write")).toBe(true);
+    expect(canPerform("editor", "write")).toBe(true);
+    expect(canPerform("viewer", "write")).toBe(false);
   });
 
   it("only owner can manage_members", () => {
