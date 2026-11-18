@@ -40,6 +40,8 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-planner}:${POSTGRES_PASSWORD:-planner}@postgres:5432/${POSTGRES_DB:-planner}
       REDIS_URL: redis://redis:6379
       WEB_ORIGIN: http://localhost:${WEB_PORT:-5173}
+      RATE_LIMIT_REGISTER: 200 # dev only: lets e2e suites be rerun; production default is 10/hour
+      RATE_LIMIT_GLOBAL: 3000 # dev only: many browsers share one IP in e2e; production default is 600/min
     ports:
       - "${API_PORT:-4000}:4000"
     volumes:
@@ -64,6 +66,8 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-planner}:${POSTGRES_PASSWORD:-planner}@postgres:5432/${POSTGRES_DB:-planner}
       REDIS_URL: redis://redis:6379
       WEB_ORIGIN: http://localhost:${WEB_PORT:-5173}
+      RATE_LIMIT_REGISTER: 200 # dev only: lets e2e suites be rerun; production default is 10/hour
+      RATE_LIMIT_GLOBAL: 3000 # dev only: many browsers share one IP in e2e; production default is 600/min
     ports:
       - "${API2_PORT:-4001}:4000"
     volumes:

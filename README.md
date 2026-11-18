@@ -141,7 +141,7 @@ A CI status badge will be added once the repository has a GitHub remote.
 
 ## API hardening
 
-- **Rate limiting:** 300 requests/min/IP globally; `POST /auth/login` allows 10
+- **Rate limiting:** 600 requests/min/IP globally (`RATE_LIMIT_GLOBAL`); `POST /auth/login` allows 10
   *failed* attempts per 15 min (successes don't count); `POST /auth/register`
   10/hour. Over the limit → `429 rate_limited`. Set `TRUST_PROXY` to the number
   of reverse-proxy hops when deployed so the real client IP is used.
@@ -201,8 +201,8 @@ table, dependencies, Gantt view with critical tasks highlighted, read-only
 viewer mode), and real-time updates (cookie-authenticated WebSocket at
 `/ws?projectId=N`, members-only rooms, Redis pub/sub fan-out), and edit-conflict
 handling (versioned PATCH, 409 with current state, reapply/keep UI), and API
-hardening (see below). Step 12 (tests and CI) is written but **not finished**:
-API unit/integration tests, ESLint and the GitHub Actions workflow are in place;
-the Playwright e2e specs are written but have not yet been run green. Next up:
-finish Step 12, then Step 13 — see
+hardening (see below). Step 12 (tests and CI) is done locally: 87 API
+unit/integration tests, 5 Playwright e2e flows (green on three consecutive runs),
+ESLint, and a GitHub Actions workflow (not yet run: the repo has no GitHub remote,
+so the CI badge is still to add). Next up is Step 13 (load testing) — see
 [`docs/ai-build-guide.md`](docs/ai-build-guide.md).

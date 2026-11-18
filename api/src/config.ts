@@ -31,5 +31,9 @@ export const config = {
   jwtSecret,
   logLevel: process.env.LOG_LEVEL ?? (nodeEnv === "test" ? "silent" : "info"),
   /** Number of reverse-proxy hops to trust for client IPs (needed for correct rate limiting behind a proxy). */
+  /** Max requests per IP per minute across the API. */
+  globalRateLimit: Number(process.env.RATE_LIMIT_GLOBAL ?? 600),
+  /** Max POST /auth/register calls per IP per hour. Raised in dev compose so e2e suites are rerunnable. */
+  registerRateLimit: Number(process.env.RATE_LIMIT_REGISTER ?? 10),
   trustProxy: Number(process.env.TRUST_PROXY ?? 0),
 };

@@ -19,23 +19,30 @@ export function useProjectSocket(projectId: number): SocketStatus {
     let attempt = 0;
     let closed = false;
 
-    const refresh = () => {
-      for (const k of ["tasks", "deps", "schedule", "members", "project"]) {
-        void qc.invalidateQueries({ queryKey: [k, projectId] });
-      }
+    const refetch = (keys: string[]) => {
+      for (const k of keys) void qc.invalidateQueries({ queryKey: [k, projectId] });
+    };
+    const ALL = ["tasks", "deps", "schedule", "members", "project"];
+    // Only refetch what an event can have changed; refetching everything on every
+    // event multiplies request volume by the number of open boards.
+    const keysFor = (type: string): string[] => {
+      if (type.startsWith("task.") || type.startsWith("dependency.")) return ["tasks", "deps", "schedule"];
+      if (type.startsWith("member.")) return ["members"];
+      if (type.startsWith("project.")) return ["project"];
+      return ALL;
     };
 
     const connect = () => {
       setStatus("connecting");
       ws = new WebSocket(`${API_URL.replace(/^http/, "ws")}/ws?projectId=${projectId}`);
       ws.onopen = () => {
-        if (attempt > 0) refresh();
+        if (attempt > 0) refetch(ALL);
         attempt = 0;
         setStatus("live");
       };
       ws.onmessage = (e) => {
         const msg = JSON.parse(String(e.data)) as { type: string };
-        if (msg.type !== "connected") refresh();
+        if (msg.type !== "connected") refetch(keysFor(msg.type));
       };
       ws.onclose = () => {
         if (closed) return;

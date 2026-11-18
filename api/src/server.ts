@@ -35,9 +35,9 @@ export function createApp(options: AppOptions = {}): express.Express {
 
   const limits = options.rateLimit;
   if (limits !== false) {
-    app.use(createGlobalLimiter(limits?.global));
+    app.use(createGlobalLimiter(limits?.global ?? config.globalRateLimit));
     app.use("/auth/login", createLoginLimiter(limits?.login));
-    app.use("/auth/register", createRegisterLimiter(limits?.register));
+    app.use("/auth/register", createRegisterLimiter(limits?.register ?? config.registerRateLimit));
   }
 
   app.use(express.json({ limit: "100kb" }));
