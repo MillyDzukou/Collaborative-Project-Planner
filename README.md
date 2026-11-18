@@ -148,13 +148,14 @@ full results, caveats). Measured on one laptop with everything in Docker, produc
 | | Before | After |
 |-|--------|-------|
 | Bottleneck | `GET /projects` seq-scanned `project_members` (no index on `user_id`) | `idx_project_members_user_id` — 20.4 ms → 0.24 ms per query |
-| Mixed-workload throughput | 106 req/s | **159 req/s** |
+| Total throughput (all 3 scenarios; closed-loop VUs, so it follows latency) | 106 req/s | **159 req/s** |
 | p95: list projects / list tasks / patch task | 433 / 802 / 508 ms | **106 / 219 / 252 ms** |
 | Errors | 0.02% | **0%** |
 
 WebSockets: 1,000 simultaneous authenticated connections with zero failures (ceiling not reached), 310 events/s
-delivered, REST-write → WebSocket latency median 18 ms / p95 477 ms. Load testing also exposed a lockout bug in the
+delivered (connect time was slow though: p95 17.9 s while ramping), REST-write → WebSocket latency median 18 ms / p95 477 ms. Load testing also exposed a lockout bug in the
 login rate limiter (valid concurrent logins counted as failures), now fixed with a regression test.
+Each before/after figure is a single run on a laptop; run-to-run noise is large (see `load/README.md`).
 
 ## API hardening
 
@@ -218,7 +219,7 @@ table, dependencies, Gantt view with critical tasks highlighted, read-only
 viewer mode), and real-time updates (cookie-authenticated WebSocket at
 `/ws?projectId=N`, members-only rooms, Redis pub/sub fan-out), and edit-conflict
 handling (versioned PATCH, 409 with current state, reapply/keep UI), and API
-hardening (see below). Step 12 (tests and CI) is done locally: 87 API
+hardening (see below). Step 12 (tests and CI) is done locally: 88 API
 unit/integration tests, 5 Playwright e2e flows (green on three consecutive runs),
 ESLint, and a GitHub Actions workflow (not yet run: the repo has no GitHub remote,
 so the CI badge is still to add). Step 13 (load testing) is done: k6 scripts, a

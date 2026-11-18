@@ -41,7 +41,7 @@ login response and sent as an explicit `Cookie` header). Tunables: `USERS`, `PEA
 | Script | Scenario | What it does |
 |--------|----------|--------------|
 | `http.js` | `mixed` | 0→50 VUs: list projects, list tasks, fetch schedule, update a task (409 counted as a valid outcome) |
-| `http.js` | `big_schedule` | 5 VUs hammering the schedule of a 500-task / ~600-dependency project |
+| `http.js` | `big_schedule` | 5 VUs hammering the schedule of a 500-task / ~460-dependency project |
 | `http.js` | `login` | 5 logins/s (argon2 is deliberately CPU-expensive) |
 | `ws.js` | `clients` | ramp to 1,000 simultaneous authenticated WebSocket connections across project rooms |
 | `ws.js` | `writers` | 20 task updates/s; clients record REST-write → WebSocket delivery latency |
@@ -80,9 +80,17 @@ k6 HTTP mixed workload on the bulk-sized DB, same script and machine:
 | error rate | 0.02% | **0%** |
 | thresholds | 3 crossed | all pass |
 
+Caveats: one run per column, so treat the deltas as indicative, not precise. Throughput is the total over all three
+scenarios and the VU-based ones are closed-loop (fewer requests when latency is higher), so it mostly mirrors latency.
+Noise is sizeable: the small-DB baseline (147 req/s; p95 319 ms tasks, 516 ms patch, 956 ms login) was slower than "after" on
+the bulk DB in several metrics despite far less data, so the runs were not under identical conditions. That the
+index is the cause of the whole improvement is an inference (the plans show a ~20 ms scan per list request, and CPU
+contention is the likely mechanism for the other endpoints); no CPU profile was captured. The "before" run (index dropped)
+appears to have used the fixed login limiter (only 3 login 429s); the 96%-failure run described below was an earlier run whose raw output is not kept in `results/`.
+
 **WebSockets (1,000 clients, 20 writes/s, one API instance):** all 1,000 connections upgraded successfully
 (zero failures — the real ceiling was not reached; only 1,000 were tried), ~37.9k events delivered (310/s),
-REST write → WebSocket delivery latency median 18 ms, p95 477 ms, max 3.1 s. The writer scenario ran short of
+connect time was slow under the ramp (p95 17.9 s, max 18.7 s), REST write → WebSocket delivery latency median 18 ms, p95 477 ms, max 3.1 s. The writer scenario ran short of
 VUs (163 dropped iterations) because each iteration does two requests while the system is saturated.
 
 ## Defect found by load testing

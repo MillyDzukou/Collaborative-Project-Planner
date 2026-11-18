@@ -2,7 +2,7 @@
 --   docker exec -i planner-load-postgres-1 psql -U planner -d planner < load/seed-bulk.sql
 --
 -- 50,000 users, 50,000 projects (each owned by one user), ~150,000 extra memberships
--- (every user also belongs to 3 other projects), 20 tasks per project (1M tasks) and ~1.3M
+-- (every user also belongs to 3 other projects), 20 tasks per project (1M tasks) and ~900k
 -- dependencies forming acyclic chains/branches. Password hashes are fake (these users can't log in).
 BEGIN;
 
