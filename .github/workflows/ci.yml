@@ -81,6 +81,14 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
+      # Must run BEFORE the stack starts: `docker compose up` bind-mounts ./web into the web container
+      # and creates a root-owned web/node_modules mount point on the host, after which `npm ci` as the
+      # runner user fails with EACCES (npm exit code 243).
+      - name: Install web dependencies and browser
+        working-directory: web
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
       - name: Start the stack
         run: |
           cp .env.example .env
@@ -95,11 +103,6 @@ jobs:
             curl -sf http://localhost:5173 >/dev/null && break
             sleep 2
           done
-      - name: Install web dependencies and browser
-        working-directory: web
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
       - name: Run e2e tests
         working-directory: web
         run: npm run e2e
