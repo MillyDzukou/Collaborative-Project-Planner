@@ -20,5 +20,8 @@ export const httpLogger = pinoHttp({
     res.setHeader("X-Request-Id", id);
     return id;
   },
+  // `ip` is what Express (and therefore the rate limiter) treats as the client IP after TRUST_PROXY
+  // is applied; use it to verify the proxy-hop setting in a real deployment.
+  customProps: (req) => ({ ip: (req as { ip?: string }).ip }),
   customLogLevel: (_req, res, err) => (err || res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info"),
 });

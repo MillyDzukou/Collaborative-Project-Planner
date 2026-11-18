@@ -1,0 +1,63 @@
+# Render Blueprint for the Collaborative Project Planner.
+#
+# STATUS: written from Render's documented blueprint spec and NOT yet applied to a real Render account
+# (see docs/deployment.md). Review it in the Render dashboard ("New > Blueprint") before accepting.
+#
+# Topology (same as docker-compose.prod.yml): the public "planner-web" service serves the SPA and
+# proxies /api (incl. WebSockets) to the PRIVATE "planner-api" service, so the browser only ever sees one
+# origin and the SameSite=Lax auth cookie stays first-party. Plans are "starter" (not free) on purpose:
+# free web services spin down when idle, which drops WebSocket connections, and free Postgres expires.
+databases:
+  - name: planner-db
+    plan: basic-256mb
+    databaseName: planner
+    user: planner
+
+services:
+  - type: keyvalue
+    name: planner-redis
+    plan: starter
+    ipAllowList: [] # internal network only
+    maxmemoryPolicy: noeviction
+
+  - type: pserv
+    name: planner-api
+    runtime: docker
+    dockerfilePath: ./api/Dockerfile # no target: the Dockerfile's final stage is the production image
+    dockerContext: ./api
+    plan: starter
+    # Release step: runs before each new version starts receiving traffic; a failure aborts the deploy.
+    preDeployCommand: npm run migrate:up
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: planner-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: planner-redis
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true # random, stored by Render, never in git
+      - key: WEB_ORIGIN
+        sync: false # set by hand after the first deploy to the public web URL (https://<name>.onrender.com)
+      - key: TRUST_PROXY
+        value: "2" # nginx + Render's edge in front of the API; verify per docs/deployment.md
+      - key: LOG_LEVEL
+        value: info
+
+  - type: web
+    name: planner-web
+    runtime: docker
+    dockerfilePath: ./web/Dockerfile
+    dockerContext: ./web
+    plan: starter
+    envVars:
+      - key: API_UPSTREAM
+        fromService:
+          type: pserv
+          name: planner-api
+          property: hostport

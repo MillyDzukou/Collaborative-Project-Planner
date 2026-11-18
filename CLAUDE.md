@@ -48,3 +48,10 @@ E2E: `cd web && npm run e2e` (needs the stack up; `POST /auth/register` is limit
 `load/README.md` has the k6 workflow. The load stack is a separate compose project (`-p planner-load`, ports
 4100/5433/6380, `docker-compose.load.yml`, production API image). Never run `load/seed-bulk.sql` against the dev DB.
 When adding a query that filters on a column not covered by an index, check it with `EXPLAIN ANALYZE` (`load/explain.sql`).
+
+## Production rehearsal / deploy
+
+`docker-compose.prod.yml` runs the production images locally (http://localhost:8080, needs `JWT_SECRET` and
+`POSTGRES_PASSWORD` in the environment; separate project `planner-prod`). The web image proxies `/api` to the API, so
+production builds use `VITE_API_URL=/api`. Keep `prod` as the LAST stage of both Dockerfiles. Never put real
+secrets, hosting credentials or tokens in the repo; real deployment steps (accounts, secrets, DNS) are the user's — see `docs/deployment.md`.

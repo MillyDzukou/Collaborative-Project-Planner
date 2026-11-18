@@ -1,4 +1,16 @@
+/**
+ * Dev default is the API on :4000 (cross-origin, allowed by CORS). Production builds set
+ * VITE_API_URL=/api so the browser only ever talks to its own origin, where nginx proxies /api
+ * to the API; that keeps the SameSite=Lax auth cookie first-party on any hosting domain.
+ */
 export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+
+/** WebSocket base URL matching API_URL (handles both absolute http(s) URLs and a relative path like "/api"). */
+export function wsBaseUrl(): string {
+  if (/^https?:/.test(API_URL)) return API_URL.replace(/^http/, "ws");
+  const scheme = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return `${scheme}//${window.location.host}${API_URL}`;
+}
 
 export class ApiError extends Error {
   status: number;
