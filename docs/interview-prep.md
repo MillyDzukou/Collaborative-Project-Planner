@@ -9,12 +9,12 @@ that falls apart. Edit the wording into your own voice; you should be able to ex
 | You can say | You can't say (yet) |
 |-------------|---------------------|
 | Built and ran it end to end locally; 90 automated API tests, 5 browser (Playwright) flows, k6 load tests | "Deployed" or "live at …": nothing is deployed; the Render config has never been applied |
-| Wrote a GitHub Actions workflow (lint, type-check, test, build, e2e) | "CI is green": the workflow has never run (no GitHub remote yet) |
+| CI runs on GitHub Actions (lint, type-check, 90 tests, build, audit, Playwright e2e) and was green at commit `4d4bf52` | Anything about a *deployment* pipeline: CI only tests; nothing deploys |
 | Load-tested on a laptop and fixed a measured bottleneck (before/after numbers below) | "Handles N users in production" or any absolute capacity: numbers are single runs on one laptop with everything in Docker |
 | Held 1,000 simultaneous WebSocket connections with zero failures | "Supports 1,000 users": 1,000 is the number *tried*, not a ceiling, and connect times were slow while ramping (p95 about 18 s) |
 | Built with an AI coding assistant (Claude Code) using worktrees and independent review agents; I can explain the code | Hide that: it is in `docs/ai-build-guide.md`, and interviewers will ask. See section 5 |
 
-If you want live-link and green-CI claims, do the real deploy and push to GitHub first (see `docs/deployment.md`).
+If you want a live-link claim, do the real deploy first (see `docs/deployment.md`). Check the Actions tab is still green before you cite CI.
 
 ## 2. The 30-second pitch
 
@@ -96,6 +96,17 @@ them); do the real deploy and verify `TRUST_PROXY` and HTTPS cookies; add a Post
   proxies `/api` (and WebSockets) through the same nginx origin. Verified locally: all 5 browser flows pass against that topology; real HTTPS
   is **not** verified until a real deploy.
 
+### 4e. The first CI run found two bugs only Linux could show
+
+- **Situation:** everything passed on my Windows machine, but the first GitHub Actions run failed at the API tests.
+- **Action:** job logs need admin rights, so I reproduced it in a clean `node:22` Linux container. Cause 1: `package-lock.json` had been
+  generated on Windows and lacked the Linux optional packages, so `npm ci` on Linux skipped `@rollup/rollup-linux-x64-gnu` and Vitest couldn't
+  start (a known npm bug). Fixing it also surfaced a newly published high-severity advisory in a transitive dependency that would have failed the audit step
+  next, so I upgraded `node-pg-migrate` to v9 and checked migrations up and down. The second run then failed the e2e job with npm exit code 243: that is
+  `EACCES`, caused by `docker compose up` creating a root-owned `web/node_modules` before the host `npm ci` ran; I reproduced that in a container too.
+- **Result:** all three jobs (API, web, e2e) green at commit `4d4bf52`.
+- **Lesson to say out loud:** "works on my machine" includes OS, file ownership and step order; run CI early, not at the end.
+
 ## 5. Being open about the AI-assisted workflow
 
 The project was built with Claude Code: each step in its own git worktree, an independent review agent checking and merging each step
@@ -112,7 +123,7 @@ The project was built with Claude Code: each step in its own git worktree, an in
 
 ## 6. Résumé bullets (measured, honest)
 
-Pick 3 to 4. Numbers are from single laptop runs and say so where it matters. No deployment or CI claims.
+Pick 3 to 4. Numbers are from single laptop runs and say so where it matters. No deployment claims.
 
 **Project line:** *Collaborative Project Planner: real-time project-planning web app (React, TypeScript, Express, PostgreSQL, Redis, WebSockets, Docker)*
 

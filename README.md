@@ -1,5 +1,7 @@
 # Collaborative Project Planner
 
+[![CI](https://github.com/MillyDzukou/Collaborative-Project-Planner/actions/workflows/ci.yml/badge.svg)](https://github.com/MillyDzukou/Collaborative-Project-Planner/actions/workflows/ci.yml)
+
 A real-time collaborative project planner. A team builds a plan as tasks and dependencies; the app computes the
 **critical path** (the chain of tasks that sets the project's duration) and every change shows up live on
 teammates' screens, with explicit conflict handling when two people edit the same task.
@@ -105,7 +107,7 @@ The full table with trade-offs is in [`docs/architecture.md`](docs/architecture.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push to `main` and every PR: API (lint, type-check, migrate,
 test, build, production `npm audit`), web (lint, build), then e2e (brings the stack up with Docker Compose and runs
-Playwright). **The workflow has never run on GitHub** (the repository has no remote yet), so there is no CI badge.
+Playwright). It is green on GitHub as of commit `4d4bf52` ([run 44420693138](https://github.com/MillyDzukou/Collaborative-Project-Planner/actions/runs/44420693138)). The first two runs failed on two CI-only bugs that local runs could not show, both fixed: an API lockfile generated on Windows that lacked the Linux optional packages (so `npm ci` on Linux skipped a package Vitest needs), and the e2e job installing web dependencies after Docker had created a root-owned `web/node_modules` (npm `EACCES`, exit code 243).
 
 ## Real-time
 
@@ -168,7 +170,6 @@ Technical:
 
 Process / verification:
 - **Not deployed.** The Render Blueprint, `TRUST_PROXY=2`, HTTPS cookies and real client IPs are unverified until a real deploy.
-- **The GitHub Actions workflow has never run** (no remote).
 - Load numbers come from a single laptop; the 30-task coursework network used as a scheduling benchmark in the build guide is not in
   this repository (the scheduler is unit-tested on chains, branches, a diamond and a synthetic 9-task graph; the seeded 11-task
   demo plan was checked by hand, not by an automated test).
@@ -201,5 +202,5 @@ Process / verification:
 Everything in steps 1–16 of the build guide that can be done without a hosting account is done: scope, infrastructure, database, authentication, projects and permissions, tasks and
 dependencies, CPM scheduling, the React frontend, real-time updates, edit-conflict handling, API hardening, tests and CI, load
 testing, deployment preparation, and documentation. **Not yet done:** a real deployment (needs your hosting account and
-secrets), a live link, the CI badge, and the demo video. Step 16 (interview preparation) is written up in
+secrets), a live link, and the demo video. Step 16 (interview preparation) is written up in
 [`docs/interview-prep.md`](docs/interview-prep.md).
