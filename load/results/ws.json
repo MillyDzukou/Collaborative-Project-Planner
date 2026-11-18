@@ -1,0 +1,312 @@
+{
+    "setup_data": {
+        "bigProjectId": null,
+        "bigTaskCount": 0,
+        "users": [
+            {
+                "email": "load-mwlukel2-0@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100085,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDgxLCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMEBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3NSwiZXhwIjoxNzk0OTkzMzc1fQ.wG6TluEy71b9CoM1Ts-Qd8SSaZiqQFTVsppMYodzGwc"
+            },
+            {
+                "password": "load-test-password-1",
+                "projectId": 100086,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDgyLCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMUBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3NSwiZXhwIjoxNzk0OTkzMzc1fQ.lFK4YVrzy9FKu79bfGmhYz7uYTygoIujkXHIy7C_FtE",
+                "email": "load-mwlukel2-1@example.com"
+            },
+            {
+                "email": "load-mwlukel2-2@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100087,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDgzLCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMkBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3NiwiZXhwIjoxNzk0OTkzMzc2fQ.Uj1V1woDBYqsmYi6lVdAizkxWuZOO4I5vmr0_ICcKc4"
+            },
+            {
+                "email": "load-mwlukel2-3@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100088,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDg0LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItM0BleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3NiwiZXhwIjoxNzk0OTkzMzc2fQ.8ESWO9323H2PkT4oKyBp1obiBDz0iyY91rHRNuokt4k"
+            },
+            {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDg1LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItNEBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3NiwiZXhwIjoxNzk0OTkzMzc2fQ.Fgrqrg0ObViyAlVRNkC4tyjj0K-5o9sIK0hksGicCCM",
+                "email": "load-mwlukel2-4@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100089
+            },
+            {
+                "email": "load-mwlukel2-5@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100090,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDg2LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItNUBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3NywiZXhwIjoxNzk0OTkzMzc3fQ.dodRDuXpFifUBqnftd2cV_5qZi_rqWkqHjyd-1PoncE"
+            },
+            {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDg3LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItNkBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3NywiZXhwIjoxNzk0OTkzMzc3fQ.O9BZt_iqfwFPvyK57XyQfbcswy8Ysk3xBry0v_sOjUs",
+                "email": "load-mwlukel2-6@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100091
+            },
+            {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDg4LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItN0BleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3NywiZXhwIjoxNzk0OTkzMzc3fQ.fypDOQ1yxe2kvESV8DX6d-iqbJKiV_V5v7Heg_vCC6o",
+                "email": "load-mwlukel2-7@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100092
+            },
+            {
+                "email": "load-mwlukel2-8@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100093,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDg5LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItOEBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3OCwiZXhwIjoxNzk0OTkzMzc4fQ.1Thq2WbHX_BX4r0DTczCVfkg-1hZiMlJOww-6G5IhmI"
+            },
+            {
+                "password": "load-test-password-1",
+                "projectId": 100094,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDkwLCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItOUBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTc3OCwiZXhwIjoxNzk0OTkzMzc4fQ.B_wmHTMiWBOug_XA2y6j8Nua5hC7PDZdXu3QMSaQDUU",
+                "email": "load-mwlukel2-9@example.com"
+            },
+            {
+                "email": "load-mwlukel2-10@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100095,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDkxLCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMTBAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3NzgsImV4cCI6MTc5NDk5MzM3OH0.f_PRBp799P_MtaS3vuk5TZn5Fr2G_aIhotkHl9PIwYo"
+            },
+            {
+                "password": "load-test-password-1",
+                "projectId": 100096,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDkyLCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMTFAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3NzgsImV4cCI6MTc5NDk5MzM3OH0.UIQh-LApZ5NAa89HAKao4tESsFdyj97dSdNcH4PWQDs",
+                "email": "load-mwlukel2-11@example.com"
+            },
+            {
+                "email": "load-mwlukel2-12@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100097,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDkzLCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMTJAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3NzksImV4cCI6MTc5NDk5MzM3OX0.kG-0LlJOpb3FojEC-Qm0xTiVAkEX8ayiMY8QC6ATwmk"
+            },
+            {
+                "email": "load-mwlukel2-13@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100098,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDk0LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMTNAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3NzksImV4cCI6MTc5NDk5MzM3OX0.f5yK1K2tCf-Ge679aj41CTNZYKtQTe84Qx8Q71r1H_Q"
+            },
+            {
+                "email": "load-mwlukel2-14@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100099,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDk1LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMTRAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3NzksImV4cCI6MTc5NDk5MzM3OX0.mYeNXP28DCIV5DDLMEn_QGU2CKbs63vkIg3u7kAtk_M"
+            },
+            {
+                "email": "load-mwlukel2-15@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100100,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDk2LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMTVAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3ODAsImV4cCI6MTc5NDk5MzM4MH0.tNaAS8cFaymvH_O8yqVk9DoVlRwu5eNZ8m4ng43JDc8"
+            },
+            {
+                "email": "load-mwlukel2-16@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100101,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDk3LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMTZAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3ODAsImV4cCI6MTc5NDk5MzM4MH0.MPAec9fAj-ZyulinJbegamAMrfGMp_8VCG77BIYFyKc"
+            },
+            {
+                "email": "load-mwlukel2-17@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100102,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDk4LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMTdAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3ODEsImV4cCI6MTc5NDk5MzM4MX0.IszRJ5kMAwbYjD03IDTJkvlOBgDd3b9NcLTMyV0-DZM"
+            },
+            {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDk5LCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMThAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3ODEsImV4cCI6MTc5NDk5MzM4MX0.wyC176U-0ByGH__BnbCzU4zgd3zAK5ErE1B1LZd2qvM",
+                "email": "load-mwlukel2-18@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100103
+            },
+            {
+                "password": "load-test-password-1",
+                "projectId": 100104,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMTAwLCJlbWFpbCI6ImxvYWQtbXdsdWtlbDItMTlAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk3ODIsImV4cCI6MTc5NDk5MzM4Mn0.owfQ0vLa2h4NgK9A4CSmJkGxjgXU7uADJ-xbAybBbTA",
+                "email": "load-mwlukel2-19@example.com"
+            }
+        ]
+    },
+    "root_group": {
+        "groups": {
+            "setup": {
+                "groups": {},
+                "checks": {
+                    "dependency created": {
+                        "fails": 0,
+                        "name": "dependency created",
+                        "path": "::setup::dependency created",
+                        "id": "2640e09c6d7c9b25bd615a48a5a2d4ed",
+                        "passes": 160
+                    }
+                },
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a"
+            }
+        },
+        "checks": {},
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "metrics": {
+        "ws_connecting": {
+            "med": 257.38958,
+            "max": 18726.985803,
+            "p(90)": 15378.8407831,
+            "p(95)": 17870.106709,
+            "avg": 3077.6783657640017,
+            "min": 6.338206
+        },
+        "ws_event_latency_ms": {
+            "med": 18,
+            "max": 3052,
+            "p(90)": 248,
+            "p(95)": 476.6999999999971,
+            "avg": 111.10977896321336,
+            "min": 6,
+            "thresholds": {
+                "p(95)<1000": false
+            }
+        },
+        "checks": {
+            "passes": 160,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_connecting": {
+            "avg": 0.5302510036057692,
+            "min": 0,
+            "med": 0,
+            "max": 253.608949,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "data_sent": {
+            "count": 1395236,
+            "rate": 11432.257547380315
+        },
+        "ws_sessions": {
+            "count": 1000,
+            "rate": 8.193780512673351
+        },
+        "http_req_duration{expected_response:true}": {
+            "med": 37.215905,
+            "max": 18030.462789,
+            "p(90)": 1003.5273689999999,
+            "p(95)": 1675.446164,
+            "avg": 501.7934856073726,
+            "min": 4.169957
+        },
+        "vus": {
+            "value": 74,
+            "min": 0,
+            "max": 1060
+        },
+        "iteration_duration": {
+            "min": 13.481431,
+            "med": 186.32807250000002,
+            "max": 18775.272016,
+            "p(90)": 2413.6404814,
+            "p(95)": 5161.532736149999,
+            "avg": 1203.1348140741816
+        },
+        "data_received": {
+            "count": 13384371,
+            "rate": 109668.59827419033
+        },
+        "http_req_receiving": {
+            "med": 0.1449085,
+            "max": 491.522223,
+            "p(90)": 0.2537155,
+            "p(95)": 0.424599,
+            "avg": 1.165903475160255,
+            "min": 0.019401
+        },
+        "iterations": {
+            "count": 1038,
+            "rate": 8.505144172154939
+        },
+        "http_reqs": {
+            "rate": 20.451676159632683,
+            "count": 2496
+        },
+        "http_req_sending": {
+            "avg": 0.1561132768429485,
+            "min": 0.0065,
+            "med": 0.044453,
+            "max": 81.528532,
+            "p(90)": 0.077505,
+            "p(95)": 0.09328075
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 2496,
+            "value": 0
+        },
+        "vus_max": {
+            "max": 1060,
+            "value": 1060,
+            "min": 1020
+        },
+        "ws_open_connections": {
+            "value": 1,
+            "min": 1,
+            "max": 1
+        },
+        "dropped_iterations": {
+            "count": 163,
+            "rate": 1.3355862235657563
+        },
+        "ws_connected_total": {
+            "count": 1000,
+            "rate": 8.193780512673351
+        },
+        "http_req_blocked": {
+            "min": 0.001901,
+            "med": 0.006501,
+            "max": 261.894664,
+            "p(90)": 0.013701,
+            "p(95)": 0.031577,
+            "avg": 0.7447179270833344
+        },
+        "http_req_duration": {
+            "avg": 501.7934856073726,
+            "min": 4.169957,
+            "med": 37.215905,
+            "max": 18030.462789,
+            "p(90)": 1003.5273689999999,
+            "p(95)": 1675.446164
+        },
+        "ws_connect_failed_total": {
+            "count": 0,
+            "rate": 0,
+            "thresholds": {
+                "count==0": false
+            }
+        },
+        "http_req_tls_handshaking": {
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_waiting": {
+            "min": 4.014847,
+            "med": 37.010965,
+            "max": 18030.348582,
+            "p(90)": 1000.526027,
+            "p(95)": 1675.21419925,
+            "avg": 500.4714688553667
+        },
+        "ws_msgs_received": {
+            "count": 38867,
+            "rate": 318.4676671860751
+        },
+        "ws_events_received_total": {
+            "count": 37867,
+            "rate": 310.27388667340176
+        }
+    }
+}

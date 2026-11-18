@@ -1,0 +1,394 @@
+{
+    "root_group": {
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {},
+                "checks": {
+                    "dependency created": {
+                        "fails": 0,
+                        "name": "dependency created",
+                        "path": "::setup::dependency created",
+                        "id": "2640e09c6d7c9b25bd615a48a5a2d4ed",
+                        "passes": 1157
+                    }
+                }
+            }
+        },
+        "checks": {
+            "big schedule 200": {
+                "path": "::big schedule 200",
+                "id": "b3288fbf94de67ca8ea2edcf3ed1b45f",
+                "passes": 2022,
+                "fails": 0,
+                "name": "big schedule 200"
+            },
+            "login 200": {
+                "path": "::login 200",
+                "id": "48b06dc5cde7f6ebb606ad7da726a2a5",
+                "passes": 673,
+                "fails": 3,
+                "name": "login 200"
+            },
+            "projects 200": {
+                "name": "projects 200",
+                "path": "::projects 200",
+                "id": "83ea0d60b59668e5ec128b2cccc28476",
+                "passes": 3031,
+                "fails": 0
+            },
+            "tasks 200": {
+                "path": "::tasks 200",
+                "id": "4e6e9c043431047f1961f339a8ba9836",
+                "passes": 3031,
+                "fails": 0,
+                "name": "tasks 200"
+            },
+            "schedule 200": {
+                "passes": 3031,
+                "fails": 0,
+                "name": "schedule 200",
+                "path": "::schedule 200",
+                "id": "9b096765d21300dbf7453f193b8d1c6d"
+            },
+            "patch 200 or 409": {
+                "fails": 0,
+                "name": "patch 200 or 409",
+                "path": "::patch 200 or 409",
+                "id": "478efac8ec8907f29a30d4a030f30664",
+                "passes": 3031
+            }
+        },
+        "name": "",
+        "path": ""
+    },
+    "metrics": {
+        "vus_max": {
+            "value": 85,
+            "min": 85,
+            "max": 85
+        },
+        "iteration_duration": {
+            "avg": 1152.199727769417,
+            "min": 93.5976,
+            "med": 942.898753,
+            "max": 4409.18814,
+            "p(90)": 2441.659022,
+            "p(95)": 2730.837580599999
+        },
+        "http_reqs": {
+            "rate": 106.10730968890076,
+            "count": 17340
+        },
+        "http_req_receiving": {
+            "avg": 1.6998318889849922,
+            "min": -3.274356,
+            "med": 0.167609,
+            "max": 219.379557,
+            "p(90)": 4.724991300000004,
+            "p(95)": 9.451183149999999
+        },
+        "http_req_sending": {
+            "avg": 0.059316359573240975,
+            "min": 0.006801,
+            "med": 0.026401,
+            "max": 43.995972,
+            "p(90)": 0.072904,
+            "p(95)": 0.10571194999999993
+        },
+        "data_received": {
+            "count": 159499181,
+            "rate": 976010.8992787218
+        },
+        "http_req_failed{scenario:login}": {
+            "passes": 3,
+            "fails": 673,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0.004437869822485207
+        },
+        "http_req_failed": {
+            "passes": 3,
+            "fails": 17337,
+            "value": 0.00017301038062283736
+        },
+        "http_req_blocked": {
+            "avg": 0.04399490824682698,
+            "min": 0.0019,
+            "med": 0.007301,
+            "max": 97.708474,
+            "p(90)": 0.011901,
+            "p(95)": 0.016505999999999927
+        },
+        "http_req_duration{name:GET big /projects/:id/schedule}": {
+            "avg": 132.36073766864513,
+            "min": 8.771656,
+            "med": 76.15388949999999,
+            "max": 1227.085435,
+            "p(90)": 320.0337716000001,
+            "p(95)": 432.41096574999983,
+            "thresholds": {
+                "p(95)<1000": false
+            }
+        },
+        "data_sent": {
+            "count": 6283424,
+            "rate": 38449.6664518265
+        },
+        "http_req_waiting": {
+            "min": 3.969352,
+            "med": 139.0365765,
+            "max": 1503.919066,
+            "p(90)": 424.78707610000004,
+            "p(95)": 542.8864937499999,
+            "avg": 186.91361162174243
+        },
+        "http_req_connecting": {
+            "max": 97.596168,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.03125781937716263,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_duration{name:GET /projects/:id/tasks}": {
+            "avg": 286.92974862817596,
+            "min": 4.610329,
+            "med": 238.145159,
+            "max": 1478.372056,
+            "p(90)": 633.469664,
+            "p(95)": 801.5439965,
+            "thresholds": {
+                "p(95)<300": true
+            }
+        },
+        "http_req_failed{scenario:big_schedule}": {
+            "passes": 0,
+            "fails": 2022,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 544.4403644,
+            "avg": 188.61861366637916,
+            "min": 4.116362,
+            "med": 140.594645,
+            "max": 1504.22188,
+            "p(90)": 425.8445383999999
+        },
+        "iterations": {
+            "count": 5729,
+            "rate": 35.05702290701917
+        },
+        "http_req_duration": {
+            "avg": 188.67275987030078,
+            "min": 4.116362,
+            "med": 140.61245100000002,
+            "max": 1504.22188,
+            "p(90)": 426.0788366,
+            "p(95)": 544.44531495
+        },
+        "vus": {
+            "min": 0,
+            "max": 61,
+            "value": 7
+        },
+        "http_req_failed{scenario:mixed}": {
+            "passes": 0,
+            "fails": 12124,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_duration{name:PATCH /tasks/:id}": {
+            "avg": 215.65455143121113,
+            "min": 8.253525,
+            "med": 186.528184,
+            "max": 1504.22188,
+            "p(90)": 424.906331,
+            "p(95)": 507.5250275,
+            "thresholds": {
+                "p(95)<300": true
+            }
+        },
+        "http_req_duration{name:GET /projects/:id/schedule}": {
+            "min": 4.116362,
+            "med": 154.207112,
+            "max": 1183.649847,
+            "p(90)": 342.136152,
+            "p(95)": 439.348111,
+            "avg": 171.52216312108226,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        },
+        "checks": {
+            "passes": 15976,
+            "fails": 3,
+            "value": 0.9998122535828274
+        },
+        "http_req_duration{name:GET /projects}": {
+            "p(90)": 361.974093,
+            "p(95)": 432.5809195,
+            "avg": 183.70251519498538,
+            "min": 16.076423,
+            "med": 153.990723,
+            "max": 923.131701,
+            "thresholds": {
+                "p(95)<300": true
+            }
+        },
+        "http_req_duration{name:POST /auth/login}": {
+            "min": 90.886824,
+            "med": 373.058622,
+            "max": 1484.637314,
+            "p(90)": 692.428527,
+            "p(95)": 833.67044275,
+            "avg": 403.9484944452661,
+            "thresholds": {
+                "p(95)<1500": false
+            }
+        },
+        "http_req_tls_handshaking": {
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0
+        }
+    },
+    "setup_data": {
+        "bigProjectId": 100063,
+        "bigTaskCount": 500,
+        "users": [
+            {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDQxLCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMEBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQyNiwiZXhwIjoxNzk0OTkzMDI2fQ.9Qv5IctK_dj0FLTvsStIHicJQp9uDSXdJqUrR4Yq4d0",
+                "email": "load-mwlucx9l-0@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100043
+            },
+            {
+                "projectId": 100044,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDQyLCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMUBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQyNywiZXhwIjoxNzk0OTkzMDI3fQ.7NfvVDbDIu4tUJQi48702W6NdFMLFlukp3WnwWLoVKo",
+                "email": "load-mwlucx9l-1@example.com",
+                "password": "load-test-password-1"
+            },
+            {
+                "projectId": 100045,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDQzLCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMkBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQyOCwiZXhwIjoxNzk0OTkzMDI4fQ.RdSA65uQHP4Z6SaTv2wfoseJh42R4peZ0oyiTSpNHcY",
+                "email": "load-mwlucx9l-2@example.com",
+                "password": "load-test-password-1"
+            },
+            {
+                "projectId": 100046,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDQ0LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtM0BleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQyOSwiZXhwIjoxNzk0OTkzMDI5fQ.0FPhYypSmUij27jNb0ArO5UoGg5uBWZUwc7JoqW5g-M",
+                "email": "load-mwlucx9l-3@example.com",
+                "password": "load-test-password-1"
+            },
+            {
+                "email": "load-mwlucx9l-4@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100047,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDQ1LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtNEBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQzMCwiZXhwIjoxNzk0OTkzMDMwfQ.KfDZT3VJVifzNYRjWaMvhFTDHSdNYtS9_d2jn85y6sY"
+            },
+            {
+                "projectId": 100048,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDQ2LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtNUBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQzMSwiZXhwIjoxNzk0OTkzMDMxfQ._ZQD5y876eTdhd3P3XrBAt8GI7ug8Sin3QI0ZOIkCdY",
+                "email": "load-mwlucx9l-5@example.com",
+                "password": "load-test-password-1"
+            },
+            {
+                "projectId": 100049,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDQ3LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtNkBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQzMiwiZXhwIjoxNzk0OTkzMDMyfQ.lCr09pjnb6rp7pASQi-eNJAsjsbU3VRCfytrEfxEE-M",
+                "email": "load-mwlucx9l-6@example.com",
+                "password": "load-test-password-1"
+            },
+            {
+                "password": "load-test-password-1",
+                "projectId": 100050,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDQ4LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtN0BleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQzMywiZXhwIjoxNzk0OTkzMDMzfQ.d0BvGeIqiA5rDrJqYKUx-WROSkGPLQnKg746dG_8FHE",
+                "email": "load-mwlucx9l-7@example.com"
+            },
+            {
+                "email": "load-mwlucx9l-8@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100051,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDQ5LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtOEBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQzNCwiZXhwIjoxNzk0OTkzMDM0fQ.3qy3VJ2Mrb3ZIsehn1uHg-Z0NbTuA7C9GF8CNRMzFcA"
+            },
+            {
+                "email": "load-mwlucx9l-9@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100052,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDUwLCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtOUBleGFtcGxlLmNvbSIsImlhdCI6MTc5NDk4OTQzNSwiZXhwIjoxNzk0OTkzMDM1fQ.beoQBDUQgx89oDcG1WAUfRcYTR0CagRXmH2PF02FofI"
+            },
+            {
+                "email": "load-mwlucx9l-10@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100053,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDUxLCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMTBAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0MzYsImV4cCI6MTc5NDk5MzAzNn0.tA5c6lhuNYeDj20IlmjwANCw7l8djn3oVIKMq0_d4po"
+            },
+            {
+                "email": "load-mwlucx9l-11@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100054,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDUyLCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMTFAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0MzcsImV4cCI6MTc5NDk5MzAzN30.rwh5v14x5FBREUasgJwDr7pM3wunNy2tS8YQ0ajOtVU"
+            },
+            {
+                "email": "load-mwlucx9l-12@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100055,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDUzLCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMTJAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0MzgsImV4cCI6MTc5NDk5MzAzOH0.j6wRh_lR1KTiUeLtSpXH4M1s0MO9URMbzDwfN2jJLRY"
+            },
+            {
+                "email": "load-mwlucx9l-13@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100056,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDU0LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMTNAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0MzksImV4cCI6MTc5NDk5MzAzOX0.d92PABnQVReL4IAc_9fjhW3tr0Ad6nzLJPx1cGYVoR8"
+            },
+            {
+                "password": "load-test-password-1",
+                "projectId": 100057,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDU1LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMTRAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0NDAsImV4cCI6MTc5NDk5MzA0MH0.ibkbuBiMYjf02vbdMVEZLYDFqjN_6uDyiw8WUZPvCpo",
+                "email": "load-mwlucx9l-14@example.com"
+            },
+            {
+                "email": "load-mwlucx9l-15@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100058,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDU2LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMTVAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0NDEsImV4cCI6MTc5NDk5MzA0MX0.TEZ5BfCvMBedd-mhost9VGTTLSpxpsuYonTZ-BIUJu8"
+            },
+            {
+                "email": "load-mwlucx9l-16@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100059,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDU3LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMTZAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0NDIsImV4cCI6MTc5NDk5MzA0Mn0.fQ8-oCXI-glwraJheCj6EJs0fn-x0Nxaji428GG9y0g"
+            },
+            {
+                "email": "load-mwlucx9l-17@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100060,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDU4LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMTdAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0NDMsImV4cCI6MTc5NDk5MzA0M30.MmiF5ZNp0Ljn7Opnnt9wOlk_RVTnigq_g_DOwXJ2GwA"
+            },
+            {
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDU5LCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMThAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0NDQsImV4cCI6MTc5NDk5MzA0NH0.BxDeBbYfg3g5ilyuBhi1ppdRPRknas3VmsFs07FN1bs",
+                "email": "load-mwlucx9l-18@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100061
+            },
+            {
+                "email": "load-mwlucx9l-19@example.com",
+                "password": "load-test-password-1",
+                "projectId": 100062,
+                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTAwMDYwLCJlbWFpbCI6ImxvYWQtbXdsdWN4OWwtMTlAZXhhbXBsZS5jb20iLCJpYXQiOjE3OTQ5ODk0NDUsImV4cCI6MTc5NDk5MzA0NX0.QN8vAqqSCiYT2HWwi25oGfckmN2Fa_TA6NUN90NaTJk"
+            }
+        ]
+    }
+}
