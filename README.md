@@ -1,129 +1,95 @@
 # Collaborative Project Planner
 
-A real-time collaborative project planner: teams create tasks and dependencies, the
-app computes the critical path, and every change appears live on teammates' screens.
+A real-time collaborative project planner. A team builds a plan as tasks and dependencies; the app computes the
+**critical path** (the chain of tasks that sets the project's duration) and every change shows up live on
+teammates' screens, with explicit conflict handling when two people edit the same task.
 
-Full build plan, data model and concept glossary: see
-`Collaborative Planner Build Guide.docx` (kept local, not committed) and
-[`docs/ai-build-guide.md`](docs/ai-build-guide.md) for how each step is built with
-Claude Code.
+> **Live demo:** not deployed yet. Deployment is prepared and rehearsed locally ([`docs/deployment.md`](docs/deployment.md))
+> but nothing has been put on a real host, so there is no live link. Run it locally in 5 minutes (below).
+> **Demo video:** not recorded yet; the script is in [`docs/demo-script.md`](docs/demo-script.md).
 
-## User stories
+![Project board with task table, dependencies and Gantt view; critical tasks in red](docs/screenshots/03-board.png)
 
-1. As a new user, I can register an account and log in, so that my projects are
-   private to me and my team.
-2. As a project owner, I can create a project, so that I have a dedicated space
-   to plan it with my team.
-3. As a project owner, I can invite a teammate and give them a role (editor or
-   viewer), so that I control who can change the plan.
-4. As an editor, I can add tasks to a project with a name and duration, so that
-   the plan reflects the real work breakdown.
-5. As an editor, I can define dependencies between tasks, so that the schedule
-   respects the real order of work.
-6. As a project member, I can view the computed critical path and project
-   duration, so that I know which tasks can't slip without delaying the project.
-7. As a project member, I can see teammates' changes appear live on my screen,
-   so that we can plan together without refreshing or overwriting each other's
-   edits.
-8. As a viewer, I can read a project's tasks and schedule but not edit them, so
-   that stakeholders can follow progress without risking the plan.
+<table>
+  <tr>
+    <td><img src="docs/screenshots/01-login.png" alt="Login and registration" width="300"></td>
+    <td><img src="docs/screenshots/02-projects.png" alt="Project list" width="300"></td>
+    <td><img src="docs/screenshots/04-board-mobile.png" alt="Board on a phone-sized screen (tables and chart scroll sideways)" width="150"></td>
+  </tr>
+</table>
 
-## MVP and non-goals
+## What it does
 
-**In scope for v1:** register and log in; create projects; invite members with
-a role; add tasks and dependencies; view the critical path; see live updates
-from teammates.
+- **Plan:** projects with tasks (name, duration in weeks, status) and finish-to-start dependencies. Cycles, self-dependencies
+  and cross-project dependencies are rejected.
+- **Critical path:** early/late start and finish, float and project duration computed with the Critical Path Method,
+  shown as a table and a Gantt chart with critical tasks highlighted.
+- **Collaborate:** invite registered users as **owner / editor / viewer**; viewers see everything and can change nothing.
+- **Live:** edits appear on other members' screens within about a second, with a connection indicator.
+- **Safe concurrent editing:** every edit carries the version it was based on; if someone saved first, the editor gets a
+  "changed by someone else" banner with *reapply my change* / *keep their version* instead of silently overwriting.
 
-**Explicitly not in v1:** email notifications, file uploads, a mobile app,
-resource levelling. These are cut so the MVP can actually ship — revisit only
-after the MVP above is deployed.
+Not in v1: email notifications, file uploads, a native mobile app, resource levelling. See [Known limitations](#known-limitations).
 
-## Tech stack
+## Quick start (about 5 minutes)
 
-| Layer     | Choice                                    |
-|-----------|--------------------------------------------|
-| Frontend  | React + Vite + TypeScript                  |
-| Backend   | Express + TypeScript                       |
-| Database  | PostgreSQL                                 |
-| Messaging | Redis (pub/sub for WebSocket fan-out)      |
-| Runtime   | Docker / Docker Compose                    |
-
-## Quick start
-
-Requires only Docker.
+Requires only Docker. Building the images the first time takes a few minutes.
 
 ```bash
 cp .env.example .env
-docker compose up --build
+docker compose up --build -d
+docker compose exec -T api npm run migrate:up                              # create the tables
+docker compose exec -T -e DEMO_PASSWORD='pick-a-long-password' api npm run seed:demo   # optional demo account + sample plan
 ```
 
-- API: http://localhost:4000/health
-- Web: http://localhost:5173
+- Web app: http://localhost:5173 &nbsp;·&nbsp; API health: http://localhost:4000/health
+- Demo login: `demo@planner.example` with the password you chose (a sample 11-task plan with a 17-week critical path).
+- Or just click **Register** and make your own account (password of at least 10 characters).
+- Stop with `docker compose down` (add `-v` to also delete the database).
 
-That's the whole setup — one command, no local Node/Postgres/Redis install required.
-Stop with `Ctrl+C`, tear down with `docker compose down` (add `-v` to also drop
-database/redis volumes).
+To see live collaboration, register a second user, invite them from the first user's project (owner → "Teammate email"),
+and open the project in two browsers.
 
-## Folder structure
+## Documentation
 
-```
-.
-├── docker-compose.yml       # postgres, redis, api, web — one-command dev environment
-├── .env.example              # copy to .env
-├── api/                       # Express + TypeScript backend
-│   ├── src/
-│   │   ├── server.ts          # app setup, middleware, error handler
-│   │   ├── config.ts          # typed environment variables
-│   │   ├── db/                # pg pool, redis client, migration runner
-│   │   ├── auth/               # routes, middleware, password hashing      (Step 4)
-│   │   ├── projects/           # routes, service, permission checks        (Step 5)
-│   │   ├── tasks/               # routes, service, dependency rules         (Step 6)
-│   │   ├── scheduling/          # computeSchedule.ts — pure CPM logic        (Step 7)
-│   │   └── realtime/            # WebSocket setup, Redis pub/sub            (Step 9)
-│   ├── migrations/              # versioned SQL migrations                  (Step 3)
-│   ├── tests/                   # unit + integration tests                  (Step 12)
-│   └── Dockerfile               # multi-stage: dev / build / prod
-├── web/                        # React + Vite frontend
-│   ├── src/
-│   │   ├── pages/               # login, project list, project board        (Step 8)
-│   │   ├── components/
-│   │   ├── hooks/                # React Query hooks, websocket hook
-│   │   └── api/                  # typed API client
-│   ├── e2e/                      # Playwright tests                          (Step 12)
-│   └── Dockerfile
-└── docs/
-    ├── ai-build-guide.md        # how to build each step with Claude Code
-    ├── architecture.md          # system diagram + design decisions
-    └── decisions/                # architecture decision records
-```
+| | |
+|-|-|
+| [`docs/architecture.md`](docs/architecture.md) | System diagram, life of an edit, components, design decisions and trade-offs, security model |
+| [`docs/openapi.yaml`](docs/openapi.yaml) | Every REST endpoint, request/response shape and error code (OpenAPI 3; a test fails if it drifts from the code). Open it in any Swagger/OpenAPI viewer, e.g. [editor.swagger.io](https://editor.swagger.io) |
+| [`docs/er-diagram.md`](docs/er-diagram.md) | Database entity-relationship diagram |
+| [`docs/deployment.md`](docs/deployment.md) | Production images, environment variables, Render Blueprint, release checklist |
+| [`load/README.md`](load/README.md) | k6 load tests, `EXPLAIN ANALYZE`, measured results and caveats |
+| [`docs/ai-build-guide.md`](docs/ai-build-guide.md) | How each step was built with Claude Code (worktrees, subagents, MCP) |
+| [`docs/demo-script.md`](docs/demo-script.md) | 2-minute demo walkthrough |
 
-## Database
+## Tech stack
 
-Migrations live in `api/migrations/` (versioned SQL, run with
-[`node-pg-migrate`](https://github.com/salsita/node-pg-migrate)). Entity
-relationship diagram: [`docs/er-diagram.md`](docs/er-diagram.md).
+| Layer | Choice |
+|-------|--------|
+| Frontend | React + Vite + TypeScript, React Query |
+| Backend | Express + TypeScript, zod, argon2, pino |
+| Database | PostgreSQL (versioned SQL migrations with node-pg-migrate) |
+| Messaging | Redis pub/sub for WebSocket fan-out across API instances |
+| Tests | Vitest + supertest (real Postgres/Redis), Playwright, k6 |
+| Runtime | Docker / Docker Compose; nginx in front of the API in production images |
 
-```bash
-cd api
-npm install
-DATABASE_URL=postgres://planner:planner@localhost:5432/planner npm run migrate:up
-DATABASE_URL=postgres://planner:planner@localhost:5432/planner npm run seed
-```
+## Design decisions
 
-(When running inside Docker Compose, `DATABASE_URL` is already set on the `api`
-container — these commands are for running migrations from the host.)
+The full table with trade-offs is in [`docs/architecture.md`](docs/architecture.md). The headline ones:
 
-## Real-time
-
-After each successful write the API publishes `{type, projectId, payload, version}`
-to the Redis channel `project:<id>`; every API instance subscribes to the
-channels of its connected clients and forwards messages over WebSocket. To prove
-fan-out across instances:
-
-```bash
-docker compose --profile scale up -d api2     # second API on :4001
-cd api && node scripts/fanout-check.mjs       # writes via :4000, listens on :4001
-```
+- **PostgreSQL**, not a document store: the data is relational and benefits from foreign keys and constraints.
+- **Optimistic concurrency** (a `version` column) instead of row locking or CRDTs. Every `PATCH /tasks/:id` carries the
+  `version` the client last saw, and the write is one atomic statement:
+  `UPDATE tasks SET ..., version = version + 1 WHERE id = $1 AND version = $2`. Zero rows updated means someone else got
+  there first, so the API answers `409 version_conflict` with the current task and the UI lets a human pick the winner.
+  Row locks would be held for as long as a person thinks (or abandoned when a tab closes); CRDTs would merge edits
+  automatically, but that machinery (and its unintuitive merges) is overkill for small field-level edits. The trade-off:
+  a losing writer has to retry. A test fires ten simultaneous updates from the same version and asserts exactly one wins.
+- **Redis pub/sub** so API instances stay stateless: any instance can accept a write and every instance forwards the
+  event to its own WebSocket clients. Events say "something changed"; clients refetch through the normal (permission-checked) REST path.
+- **Scheduling as a pure function** (`computeSchedule`), independent of Express and Postgres, so it is trivial to unit test.
+- **Same-origin production topology:** nginx serves the SPA and proxies `/api` (and WebSockets) to the API so the `SameSite=Lax`
+  auth cookie works on any hosting domain.
 
 ## Tests and CI
 
@@ -131,115 +97,107 @@ cd api && node scripts/fanout-check.mjs       # writes via :4000, listens on :40
 |-------|------|-----|
 | API unit + integration (real Postgres/Redis) | Vitest + supertest | `cd api && npm test` (use the `planner_test` DB, see `CLAUDE.md`) |
 | WebSocket integration | Vitest + ws | included in `npm test` |
+| API docs drift check | Vitest + swagger-parser | included in `npm test` |
 | Lint / type-check | ESLint, `tsc` | `npm run lint`, `npx tsc --noEmit` in `api/` and `web/` |
 | End-to-end (browser) | Playwright | `cd web && npm run e2e` against the running stack (see `web/e2e/README.md`) |
+| Load | k6 | see [`load/README.md`](load/README.md) |
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on every push to `main` and every
-PR: API (lint, type-check, migrate, test, build, prod `npm audit`), web (lint,
-build), then e2e (brings the stack up with Docker Compose and runs Playwright).
-A CI status badge will be added once the repository has a GitHub remote.
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push to `main` and every PR: API (lint, type-check, migrate,
+test, build, production `npm audit`), web (lint, build), then e2e (brings the stack up with Docker Compose and runs
+Playwright). **The workflow has never run on GitHub** (the repository has no remote yet), so there is no CI badge.
 
-## Deployment
+## Real-time
 
-Not deployed yet; everything is prepared and rehearsed locally. The web container (nginx) serves the SPA and
-proxies `/api` (including WebSockets) to the API, so the browser sees a single origin and the `SameSite=Lax`
-auth cookie works on any hosting domain. Try the production setup on your machine:
+After each successful write the API publishes `{type, projectId, payload, version}` to the Redis channel `project:<id>`;
+every API instance subscribes to the channels of its connected clients and forwards messages over WebSocket
+(`/ws?projectId=N`, authenticated with the same cookie as REST, members only). To prove fan-out across instances:
 
 ```bash
-JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))") \
-POSTGRES_PASSWORD=choose-one docker compose -f docker-compose.prod.yml up -d --build   # http://localhost:8080
+docker compose --profile scale up -d api2     # second API on :4001
+docker compose exec -T api node scripts/fanout-check.mjs http://localhost:4000 http://api2:4000
 ```
-
-Full guide, env vars, the `TRUST_PROXY` caveat, the Render Blueprint (`render.yaml`, unverified against a real
-account) and a release checklist: [`docs/deployment.md`](docs/deployment.md).
-
-## Load testing
-
-k6 scripts, a bulk-data seed and `EXPLAIN ANALYZE` queries live in [`load/`](load/README.md) (how to run it,
-full results, caveats). Measured on one laptop with everything in Docker, production API image, 1 instance,
-50k users / 200k memberships / 1M tasks:
-
-| | Before | After |
-|-|--------|-------|
-| Bottleneck | `GET /projects` seq-scanned `project_members` (no index on `user_id`) | `idx_project_members_user_id` — 20.4 ms → 0.24 ms per query |
-| Total throughput (all 3 scenarios; closed-loop VUs, so it follows latency) | 106 req/s | **159 req/s** |
-| p95: list projects / list tasks / patch task | 433 / 802 / 508 ms | **106 / 219 / 252 ms** |
-| Errors | 0.02% | **0%** |
-
-WebSockets: 1,000 simultaneous authenticated connections with zero failures (ceiling not reached), 310 events/s
-delivered (connect time was slow though: p95 17.9 s while ramping), REST-write → WebSocket latency median 18 ms / p95 477 ms. Load testing also exposed a lockout bug in the
-login rate limiter (valid concurrent logins counted as failures), now fixed with a regression test.
-Each before/after figure is a single run on a laptop; run-to-run noise is large (see `load/README.md`).
 
 ## API hardening
 
-- **Rate limiting:** 600 requests/min/IP globally (`RATE_LIMIT_GLOBAL`); `POST /auth/login` allows 10
-  *failed* attempts per 15 min (successes don't count); `POST /auth/register`
-  10/hour. Over the limit → `429 rate_limited`. Set `TRUST_PROXY` to the number
-  of reverse-proxy hops when deployed so the real client IP is used.
-- **Headers/CORS:** `helmet` defaults; CORS and the WebSocket `Origin` check use
-  the `WEB_ORIGIN` allow-list (comma-separated), nothing else.
-- **Errors:** every failure is `{ error: { code, message } }` from one central
-  handler; 5xx never leaks internals. Malformed JSON → 400, oversized body
-  (>100 kb) → 413, unknown route → 404.
-- **Validation:** all inputs validated with length caps (names ≤ 200 chars,
-  descriptions ≤ 5000, passwords ≤ 128 to bound argon2 work, …).
-- **Logging:** structured `pino` JSON logs, one line per request with a request
-  id (`X-Request-Id`, echoed back; a safe caller-supplied id is honoured).
-  Cookies and auth headers are redacted. `LOG_LEVEL` controls verbosity.
-- **Pagination:** list endpoints (`/projects`, `/projects/:id/tasks`,
-  `/projects/:id/members`) accept `?limit=` (default 50, max 200) and
-  `?offset=` and return `page: { limit, offset, total }`. The web app follows
-  pages automatically.
-- **Shutdown:** `SIGTERM`/`SIGINT` stop accepting connections, close WebSockets,
-  drain in-flight requests, then close Postgres and Redis (10 s hard limit).
-- **Secrets:** the API refuses to start in production with the default
-  `JWT_SECRET`.
-- **Dependencies:** `npm audit --omit=dev` is clean (zod upgraded to 4.x). The
-  remaining advisories are dev-only tooling (vitest/vite/esbuild).
+- **Rate limiting (per IP, in memory per instance):** 600 requests/min globally (`RATE_LIMIT_GLOBAL`); `POST /auth/login`
+  allows 10 *failed* attempts per 15 min; `POST /auth/register` 10/hour (`RATE_LIMIT_REGISTER`). Over the limit → `429 rate_limited`.
+  Set `TRUST_PROXY` to the number of reverse-proxy hops when deployed so the real client IP is used.
+- **Headers/CORS:** `helmet`; CORS and the WebSocket `Origin` check use the `WEB_ORIGIN` allow-list only.
+- **Errors:** every failure is `{ error: { code, message } }` from one central handler; 5xx never leaks internals.
+  Malformed JSON → 400, bodies over 100 kB → 413, unknown route → 404.
+- **Validation:** all inputs validated with length caps (passwords ≤ 128 characters to bound argon2 work).
+- **Logging:** structured `pino` logs with a request id (`X-Request-Id`) and the effective client IP; cookies are redacted.
+- **Pagination:** `/projects`, `/projects/:id/tasks` and `/projects/:id/members` take `?limit=` (default 50, max 200) and `?offset=`.
+- **Shutdown:** SIGTERM/SIGINT drain requests, close WebSockets, then Postgres and Redis (10 s hard limit).
+- **Secrets:** the API refuses to start in production with the default `JWT_SECRET`. `npm audit --omit=dev` is clean.
 
-## Design decisions
+## Load testing
 
-- **PostgreSQL**, not a document store: the data (users, projects, tasks,
-  dependencies) is relational and benefits from foreign keys and constraints.
-- **Optimistic concurrency** (a `version` column) instead of row locking or CRDTs.
-  Every `PATCH /tasks/:id` carries the `version` the client last saw, and the
-  write is one atomic statement: `UPDATE tasks SET ..., version = version + 1
-  WHERE id = $1 AND version = $2`. Zero rows updated means someone else got
-  there first, so the API answers `409 version_conflict` with the task's current
-  state and the UI offers "reapply my change" or "keep their version". Row
-  locks would be held for as long as a person thinks (or abandoned when a tab
-  closes), and a lost update is exactly what they exist to prevent but at a
-  cost we don't need: conflicts on a task row are rare and cheap to resolve by
-  hand. CRDTs would merge concurrent edits automatically, but that machinery
-  (and its unintuitive merges, e.g. two people renaming the same task) is
-  overkill for small, field-level edits where a human is better placed to pick
-  the winner. The trade-off: a losing writer has to retry. A test fires ten
-  simultaneous updates from the same version and asserts exactly one succeeds.
-- **Redis pub/sub** so the API stays stateless and horizontally scalable — any
-  instance can publish an event and every instance forwards it to its own
-  WebSocket clients.
-- **Scheduling logic as a pure function** (`computeSchedule`), independent of the
-  web framework, so it is trivial to unit test.
+k6 scripts, a bulk-data seed and `EXPLAIN ANALYZE` queries live in [`load/`](load/README.md). Measured on one laptop with
+everything in Docker (production API image, one instance, 50k users / 200k memberships / 1M tasks):
+
+| | Before | After |
+|-|--------|-------|
+| Bottleneck | `GET /projects` seq-scanned `project_members` (no index on `user_id`) | `idx_project_members_user_id`: 20.4 ms → 0.24 ms per query |
+| p95: list projects / list tasks / patch task | 433 / 802 / 508 ms | **106 / 219 / 252 ms** |
+| Errors | 0.02% | **0%** |
+
+WebSockets: 1,000 simultaneous authenticated connections with zero failures (1,000 is what was tried, not a ceiling),
+REST-write → WebSocket latency median 18 ms / p95 477 ms. Load testing also exposed a lockout bug in the login rate limiter,
+now fixed with a regression test. Each figure is a single run on a laptop, and run-to-run noise is large (see `load/README.md`).
+
+## Known limitations
+
+Product:
+- **Dependencies are finish-to-start only**, durations are whole weeks, and the Gantt shows week offsets, not calendar dates.
+  No resource levelling, baselines or progress tracking beyond a free-text status.
+- **The UI is narrower than the API:** you can invite members but not change roles or remove members from the UI (the API supports
+  both), and tasks' assignee and cost, and project rename/delete, are API-only.
+- **Invitations require an existing account;** there are no email invites, notifications, password reset or email verification.
+- **No offline editing:** events missed while a client is disconnected are recovered by a full refetch on reconnect, not replayed.
+- **Conflict handling covers task fields only;** dependency edits are not versioned (they are idempotent add/remove operations).
+
+Technical:
+- **Sessions are stateless 1-hour JWTs:** logout clears the cookie but cannot revoke a token that was already copied, and there is
+  no refresh flow.
+- **Rate-limit counters live in each API process's memory,** so with several instances the limits apply per instance, not globally
+  (moving them to Redis is the next step).
+- The schedule is recomputed on every request and the dependency list is not paginated; both were fine at the tested sizes only.
+- Rate limits count logins on arrival, so more than about 10 *simultaneous* logins from one IP get a `429` until some finish.
+
+Process / verification:
+- **Not deployed.** The Render Blueprint, `TRUST_PROXY=2`, HTTPS cookies and real client IPs are unverified until a real deploy.
+- **The GitHub Actions workflow has never run** (no remote).
+- Load numbers come from a single laptop; the 30-task coursework network used as a scheduling benchmark in the build guide is not in
+  this repository (the scheduler is unit-tested on chains, branches, a diamond and a synthetic 9-task graph; the seeded 11-task
+  demo plan was checked by hand, not by an automated test).
+- A few argon2-heavy test hooks can time out on a heavily loaded machine; re-run if you see "Hook timed out".
+
+## Folder structure
+
+```
+.
+├── docker-compose.yml        # dev stack: postgres, redis, api (hot reload), web (Vite)
+├── docker-compose.prod.yml   # production-like rehearsal: prod images, nginx proxy, migrations as a release step
+├── docker-compose.load.yml   # overlay for load testing (production api image, rate limits off)
+├── render.yaml               # Render Blueprint (written, not yet applied to a real account)
+├── api/                      # Express + TypeScript backend
+│   ├── src/{auth,projects,tasks,scheduling,realtime,http,db}/  # see docs/architecture.md
+│   ├── migrations/           # versioned SQL migrations
+│   ├── tests/                # unit + integration tests (Vitest)
+│   └── Dockerfile            # multi-stage: dev / build / prod (prod must stay last)
+├── web/                      # React + Vite frontend
+│   ├── src/{pages,components,hooks,api}/
+│   ├── e2e/                  # Playwright tests
+│   ├── nginx/                # production proxy config template
+│   └── scripts/              # screenshot generator for this README
+├── load/                     # k6 scripts, bulk seed, EXPLAIN ANALYZE, results
+└── docs/                     # architecture, openapi, er-diagram, deployment, screenshots, build guide
+```
 
 ## Status
 
-Steps 1-11 are done: scope defined, infra scaffolded, the database designed,
-authentication (register/login/logout/me), projects and permissions
-(roles, membership, last-owner protection), tasks and dependencies (CRUD,
-cycle/cross-project rejection), the CPM scheduling engine, the React
-frontend (login/register, project list, board with inline-editable task
-table, dependencies, Gantt view with critical tasks highlighted, read-only
-viewer mode), and real-time updates (cookie-authenticated WebSocket at
-`/ws?projectId=N`, members-only rooms, Redis pub/sub fan-out), and edit-conflict
-handling (versioned PATCH, 409 with current state, reapply/keep UI), and API
-hardening (see below). Step 12 (tests and CI) is done locally: 88 API
-unit/integration tests, 5 Playwright e2e flows (green on three consecutive runs),
-ESLint, and a GitHub Actions workflow (not yet run: the repo has no GitHub remote,
-so the CI badge is still to add). Step 13 (load testing) is done: k6 scripts, a
-measured baseline, one bottleneck found and fixed (see below). Step 14 (deploy) is
-**prepared but not deployed**: production images, a same-origin nginx proxy, migrations
-as a release step, a demo-account seed and a Render Blueprint exist and were rehearsed
-locally, but nothing has been put on a real host yet (that needs your hosting account
-and secrets) — see [`docs/deployment.md`](docs/deployment.md). Remaining: the real
-deploy, then Steps 15–16 — see [`docs/ai-build-guide.md`](docs/ai-build-guide.md).
+Steps 1–15 of the build guide are done: scope, infrastructure, database, authentication, projects and permissions, tasks and
+dependencies, CPM scheduling, the React frontend, real-time updates, edit-conflict handling, API hardening, tests and CI, load
+testing, deployment preparation, and documentation. **Not yet done:** a real deployment (needs your hosting account and
+secrets), a live link, the CI badge, and the demo video. Step 16 (interview preparation) is not a build step.
