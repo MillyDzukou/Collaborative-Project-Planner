@@ -7,6 +7,9 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
+  // Registration runs argon2 twice (register + auto-login); give assertions more room than the 5 s
+  // default so a cold or busy machine doesn't cause flaky timeouts.
+  expect: { timeout: 10_000 },
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:5173",

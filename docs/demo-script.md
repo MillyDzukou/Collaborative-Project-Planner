@@ -1,6 +1,6 @@
 # 2-minute demo script
 
-The demo video has **not been recorded yet**; this is the script to record it from. Use the seeded demo account
+No demo video was recorded (deliberately skipped); this is the script to record one from if you want to. Use the seeded demo account
 (`npm run seed:demo`, see the README quick start) plus a second registered user, and two browser windows side by side.
 
 Total: about 2 minutes. Screen-record at 1080p; keep the browser zoom at 100–110%.

@@ -145,8 +145,7 @@ Shorter alternatives:
 
 (`20.4 / 0.24` is about 85×; use "85×" only if you also say it is one query on a seeded dataset; the end-to-end p95s in the same runs improved about 2 to 4× (patch 2×, list 4×), and that is a single before/after run each.)
 
-If asked "was it deployed?": "Not yet. It's prepared and rehearsed locally with production images and an nginx proxy, and I have a deploy
-config ready, but I haven't put it on a host." That is a fine answer; "deployed" if it wasn't is not.
+If asked "was it deployed?": "No, I chose not to host it: the setup I designed needs paid plans. It's prepared and rehearsed locally with production images and an nginx proxy, and the deploy config is in the repo, but I haven't put it on a host." That is a fine answer; "deployed" if it wasn't is not.
 
 ## 7. Likely questions and grounded answers
 
