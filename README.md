@@ -6,9 +6,10 @@ A real-time collaborative project planner. A team builds a plan as tasks and dep
 **critical path** (the chain of tasks that sets the project's duration) and every change shows up live on
 teammates' screens, with explicit conflict handling when two people edit the same task.
 
-> **Live demo:** not deployed yet. Deployment is prepared and rehearsed locally ([`docs/deployment.md`](docs/deployment.md))
-> but nothing has been put on a real host, so there is no live link. Run it locally in 5 minutes (below).
-> **Demo video:** not recorded yet; the script is in [`docs/demo-script.md`](docs/demo-script.md).
+> **Live demo:** none. This project is not hosted: the hosting options needed a paid plan for the app to work as designed
+> (see [`docs/deployment.md`](docs/deployment.md), which is prepared and was rehearsed locally with production images). Run it
+> locally in 5 minutes (below), or look at the screenshots.
+> **Demo video:** none; a 2-minute script is in [`docs/demo-script.md`](docs/demo-script.md) if you want to record one.
 
 ![Project board with task table, dependencies and Gantt view; critical tasks in red](docs/screenshots/03-board.png)
 
@@ -199,8 +200,14 @@ Process / verification:
 
 ## Status
 
-Everything in steps 1–16 of the build guide that can be done without a hosting account is done: scope, infrastructure, database, authentication, projects and permissions, tasks and
-dependencies, CPM scheduling, the React frontend, real-time updates, edit-conflict handling, API hardening, tests and CI, load
-testing, deployment preparation, and documentation. **Not yet done:** a real deployment (needs your hosting account and
-secrets), a live link, and the demo video. Step 16 (interview preparation) is written up in
-[`docs/interview-prep.md`](docs/interview-prep.md).
+The project is complete as a locally runnable, tested, documented application: scope, infrastructure, database, authentication,
+projects and permissions, tasks and dependencies, CPM scheduling, the React frontend, real-time updates, edit-conflict handling,
+API hardening, tests and CI (green on GitHub), load testing, deployment preparation, documentation, and interview prep
+([`docs/interview-prep.md`](docs/interview-prep.md)).
+
+**Deliberately not done:** a real deployment (so no live link) and a demo video. Deployment is prepared but unapplied; the
+Render settings, `TRUST_PROXY=2`, and HTTPS cookies remain unverified.
+
+## License
+
+[MIT](LICENSE).
