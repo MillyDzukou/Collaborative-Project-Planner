@@ -6,7 +6,7 @@ A real-time collaborative project planner. A team builds a plan as tasks and dep
 **critical path** (the chain of tasks that sets the project's duration) and every change shows up live on
 teammates' screens, with explicit conflict handling when two people edit the same task.
 
-> **Live demo:** none. This project is not hosted: the hosting options needed a paid plan for the app to work as designed
+> **Live demo:** none. This project is not hosted: the hosting setup I designed uses paid plans (every service in [`render.yaml`](render.yaml) is on a paid tier), so I chose not to host it
 > (see [`docs/deployment.md`](docs/deployment.md), which is prepared and was rehearsed locally with production images). Run it
 > locally in 5 minutes (below), or look at the screenshots.
 > **Demo video:** none; a 2-minute script is in [`docs/demo-script.md`](docs/demo-script.md) if you want to record one.

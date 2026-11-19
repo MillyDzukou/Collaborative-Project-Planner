@@ -11,7 +11,7 @@
 | `render.yaml` Blueprint | **Written but never applied to a real Render account** |
 | HTTPS, secure cookies over real TLS, real client IPs behind the platform edge | **Not verified** — needs a real deployment |
 
-Nothing has been deployed. Deploying needs your hosting account and real secrets, so those steps are yours.
+Nothing has been deployed, and deployment was deliberately skipped (the Blueprint uses paid plans). If you do deploy, it needs your hosting account and real secrets, so those steps are yours.
 
 ## Architecture
 
